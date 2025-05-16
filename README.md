@@ -1,21 +1,41 @@
 # AI MLOps Project
 
-Template di progetto per integrazione di Big Data, Data Cloud, MLOps e IA Generativa.
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
+[![Spark](https://img.shields.io/badge/Spark-3.5.5-orange)](https://spark.apache.org/)
+[![Docker](https://img.shields.io/badge/docker-20.10-blue)](https://www.docker.com/)
+[![MLflow](https://img.shields.io/badge/MLflow-2.6.2-green)](https://mlflow.org/)
 
-## Prerequisiti
+Template di progetto per integrazione di Big Data, Data Cloud, MLOps e IA Generativa, **production-ready**.
 
-* Python 3.8+ (consigliato 3.10 o 3.11)
-* Java 8+ (per Spark)
-* Docker
-* MLflow
-* AWS CLI / GCP SDK / Azure CLI
+---
 
-## Setup su Windows
+## 📋 Table of Contents
+
+1. [Prerequisiti](#-prerequisiti)
+2. [Setup su Windows](#-setup-su-windows)
+3. [Componenti](#-componenti)
+4. [Esempio di utilizzo](#-esempio-di-utilizzo)
+5. [MLflow UI](#mlflow-ui)
+6. [Punti mancanti e prossimi passi](#punti-mancanti-e-prossimi-passi)
+7. [Licenza](#licenza)
+
+---
+
+## 🔧 Prerequisiti
+
+* **Python** 3.8+ (consigliato 3.10 o 3.11)
+* **Java** 8+ (per Apache Spark)
+* **Docker**
+* **MLflow** CLI (`pip install mlflow`)
+* **AWS CLI** / GCP SDK / Azure CLI
+* **Git**
+
+## ⚙️ Setup su Windows
 
 1. **Clona il repository**
 
    ```bat
-   git clone https://github.com/tuo-utente/ai-mlops-project.git
+   git clone https://github.com/impesud/ai-mlops-project.git
    cd ai-mlops-project
    ```
 2. **Crea e attiva il virtualenv**
@@ -28,69 +48,87 @@ Template di progetto per integrazione di Big Data, Data Cloud, MLOps e IA Genera
    ```
 3. **Configura AWS Profile**
 
-   * Apri o crea il file `C:\Users\<TUO_UTENTE>\.aws\config`
-   * Assicurati di avere una sezione senza prefisso `profile `:
+   * Crea/modifica `C:\Users\<TUO_UTENTE>\.aws\config`:
 
      ```ini
-     [impesud]
+     [<AWS_user>]
      region = eu-central-1
      ```
-   * Imposta la variabile d'ambiente nel cmd:
+   * Esporta il profilo:
 
      ```bat
-     set AWS_PROFILE=impesud
+     setx AWS_PROFILE <AWS_user>
      ```
-4. **Imposta credenziali nel config**
+4. **Aggiorna `config.yaml`**
+   Modifica `data_ingestion/config.yaml`:
 
-   * Modifica `data_ingestion/config.yaml` con il tuo bucket S3 e le variabili d'ambiente:
-
-     ```yaml
-     format: csv
-     path: s3a://my-mlops-raw-data/
-     output_path: s3a://my-mlops-processed-data/
-     aws:
-       region: eu-central-1
-     ```
-
-## Componenti e script Windows
-
-* **data_ingestion**: lettura CSV da S3/locale, pulizia e scrittura Parquet.
-* **models**: training e valutazione con Spark→Pandas→sklearn, SMOTE e class_weight.
-* **scripts**: orchestrazione end-to-end.
-
-### Esempio di utilizzo
-
-```bat
-REM 1) Attiva virtualenv
-call venv\Scripts\activate
-
-REM 2) Esegui pipeline completa (ingest + train)
-python scripts\pipeline.py
-
-REM 3) In alternativa, step separati:
-call scripts\run_ingest.bat  :: esegue data_ingestion\ingest_spark.py
-call scripts\run_train.bat   :: esegue models\train.py
-
-REM 4) Generative AI
-python generative_ai/generate.py --prompt "Dammi un'analisi dei dati" --output report.txt
-```
-
-## MLflow UI
-
-Dopo il training, la UI di MLflow sarà disponibile su [http://localhost:5000](http://localhost:5000).
-I run e le metriche (train_accuracy, test_accuracy) sono salvati in `mlruns/`.
-
-## Punti mancanti e prossimi passi
-
-1. **Feature engineering** avanzato: estrazione di ora/giorno, aggregazioni per user_id.
-2. **Hyperparameter tuning** con CV e ottimizzazione su F1/recall per la classe purchase.
-3. **Deployment** del modello MLflow (serve script di deploy o Docker image)
-4. **Generative AI**: integrazione con `generative_ai/generate.py` e parametrizzazione nel pipeline.
-5. **CI/CD**: completare il workflow in `.github/workflows/ci-cd.yml` per automatizzare ingest→train→deploy.
+   ```yaml
+   format: csv
+   path: s3a://my-mlops-raw-data/
+   output_path: s3a://my-mlops-processed-data/
+   aws:
+     region: eu-central-1
+   ```
 
 ---
 
-Mantieni aggiornati `requirements.txt` e `data_ingestion/config.yaml` per riflettere nuove dipendenze o bucket.
+## 🧩 Componenti
+
+* **data_ingestion/**: Spark batch e streaming, pulizia dati, scrittura Parquet.
+* **data_processing/**: script e notebook per pulizia/trasformazione.
+* **models/**: training (`train.py`) con SMOTE, class weights e MLflow.
+* **scripts/**: orchestratore end-to-end (`pipeline.py`, batch `.bat`).
+* **mlops/**: Dockerfile, `entrypoint.bat`, IaC e manifest CI/CD.
+* **generative_ai/**: script `generate.py` per reportistica LLM.
+* **.github/workflows/**: pipeline GitHub Actions per CI/CD.
+
+---
+
+## 🎯 Esempio di utilizzo
+
+```bat
+:: 1) Attiva virtualenv
+call venv\Scripts\activate
+
+:: 2) Esegui pipeline completa
+python scripts\pipeline.py
+
+:: 3) Step separati
+call scripts\run_ingest.bat    :: ingest Spark
+call scripts\run_train.bat     :: train & MLflow UI
+
+:: 4) Generative AI report
+python generative_ai\generate.py --prompt "Analisi dei dati" --output report.txt
+```
+
+---
+
+## 📊 MLflow UI
+
+Avvia la UI:
+
+```bat
+mlflow ui --backend-store-uri ./mlruns --port 5000
+```
+
+Accedi: [http://localhost:5000](http://localhost:5000) e seleziona l’esperimento **my-experiment**.
+
+---
+
+## 🚀 Prossimi passi
+
+1. **Feature engineering avanzato**: ora/giorno, weekend, aggregazioni per user_id.
+2. **Hyperparameter tuning**: Grid/RandomizedSearchCV su recall/F1 per class 1.
+3. **Deployment**: script `mlops/entrypoint.bash`, Docker image, Kubernetes Helm charts.
+4. **Generative AI full integration**: pipeline con prompt dinamici e artifact MLflow.
+5. **CI/CD**: completare test unitari, sonar scan, deploy in staging/prod.
+
+---
+
+## 📜 Licenza
+
+MIT © 2025 impesud
+
 
 
 
