@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/PROJECTS/ai-mlops-project/mlruns/867429610040067164/eaddf96087d343d7827d59f6d9d77f65/artifacts
+end_time: 1747232045055
+entry_point_name: ''
+experiment_id: '867429610040067164'
+lifecycle_stage: active
+run_id: eaddf96087d343d7827d59f6d9d77f65
+run_name: whimsical-mink-410
+run_uuid: eaddf96087d343d7827d59f6d9d77f65
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747232038179
+status: 3
+tags: []
+user_id: erick

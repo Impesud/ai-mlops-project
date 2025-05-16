@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/PROJECTS/ai-mlops-project/mlruns/867429610040067164/c57c0d3ab96e46fcabc3dffb38be8e93/artifacts
+end_time: 1747216461555
+entry_point_name: ''
+experiment_id: '867429610040067164'
+lifecycle_stage: active
+run_id: c57c0d3ab96e46fcabc3dffb38be8e93
+run_name: delightful-gnat-295
+run_uuid: c57c0d3ab96e46fcabc3dffb38be8e93
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747216434743
+status: 3
+tags: []
+user_id: erick

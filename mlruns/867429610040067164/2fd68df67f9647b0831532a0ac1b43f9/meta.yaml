@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/PROJECTS/ai-mlops-project/mlruns/867429610040067164/2fd68df67f9647b0831532a0ac1b43f9/artifacts
+end_time: 1747127186026
+entry_point_name: ''
+experiment_id: '867429610040067164'
+lifecycle_stage: active
+run_id: 2fd68df67f9647b0831532a0ac1b43f9
+run_name: powerful-bass-28
+run_uuid: 2fd68df67f9647b0831532a0ac1b43f9
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747127185919
+status: 4
+tags: []
+user_id: erick

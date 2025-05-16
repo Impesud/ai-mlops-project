@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/PROJECTS/ai-mlops-project/mlruns/867429610040067164/1729cb69992d49a7af8147ce6b5a7f24/artifacts
+end_time: 1747231443889
+entry_point_name: ''
+experiment_id: '867429610040067164'
+lifecycle_stage: active
+run_id: 1729cb69992d49a7af8147ce6b5a7f24
+run_name: thoughtful-bird-632
+run_uuid: 1729cb69992d49a7af8147ce6b5a7f24
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747231433993
+status: 3
+tags: []
+user_id: erick

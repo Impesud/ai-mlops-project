@@ -1,0 +1,5 @@
+# MLflow server config (example)
+backend_store_uri: sqlite:///mlflow.db
+default_artifact_root: ./mlruns
+host: 0.0.0.0
+port: 5000
