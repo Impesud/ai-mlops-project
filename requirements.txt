@@ -1,0 +1,8 @@
+pyspark
+pyyaml
+mlflow
+scikit-learn
+pandas
+pyarrow
+boto3
+openai

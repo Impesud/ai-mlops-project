@@ -1,0 +1,24 @@
+format: csv
+path: s3a://my-mlops-raw-data/
+output_path: s3a://my-mlops-processed-data/
+
+aws:
+  access_key_id: ${AWS_ACCESS_KEY_ID}
+  secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+  region: eu-central-1
+  
+checkpoint_location: s3a://my-mlops-checkpoints/ingest_job/
+
+# --- Se usi GCP:
+#gcp:
+#  project_id: my-gcp-project
+#  keyfile_json: ${GOOGLE_APPLICATION_CREDENTIALS}
+#  bucket: your-gcp-bucket
+
+# --- Se usi Azure:
+#azure:
+#  storage_account: yourStorageAccount
+#  container: rawdata
+#  tenant_id: ${AZURE_TENANT_ID}
+#  client_id: ${AZURE_CLIENT_ID}
+#  client_secret: ${AZURE_CLIENT_SECRET}
