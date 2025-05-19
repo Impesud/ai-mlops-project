@@ -38,9 +38,9 @@ jobs:
           # Crea la cartella e la sottocartella bin
           New-Item -ItemType Directory -Path C:\hadoop\bin -Force
 
-          # Scarica il binario raw (Hadoop 3.3.5)
+          # Scarica il binario raw (Hadoop 3.2.2)
           Invoke-WebRequest `
-            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.5/bin/winutils.exe `
+            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.2.2/bin/winutils.exe `
             -OutFile C:\hadoop\bin\winutils.exe
 
       - name: Set HADOOP_HOME
