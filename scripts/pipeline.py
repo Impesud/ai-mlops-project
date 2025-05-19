@@ -97,12 +97,19 @@ if __name__ == "__main__":
     # Esegui training
     print("Avvio fase di training MLflow...")
     try:
-        subprocess.run(
+        completed = subprocess.run(
             [sys.executable, "models/train.py"],
             check=True,
-            env=env  # passa lo stesso env usato per ingestion, con AWS vars
+            env=env,
+            capture_output=True,
+            text=True
         )
+        print(completed.stdout)
     except subprocess.CalledProcessError as e:
+        print("===== TRAINING STDOUT =====")
+        print(e.stdout)
+        print("===== TRAINING STDERR =====")
+        print(e.stderr)
         print(f"ERRORE: il training è terminato con codice {e.returncode}")
         sys.exit(e.returncode)
 
