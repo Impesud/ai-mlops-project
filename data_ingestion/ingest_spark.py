@@ -31,22 +31,25 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{config['aws']['region']}.amazonaws.com")
         .getOrCreate()
     )
-    
+
     # 2) Lettura batch con schema e pulizia
-    df = (
+    batch_df = (
         spark.read
             .format(config["format"])
             .option("header", "true")
             .option("inferSchema", "true")
             .schema(schema)
             .load(config["path"])
+            .filter(col("event_time").isNotNull() & col("value").isNotNull())
     )
-    df = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
-    # 3) Scrittura batch in Parquet
-    df.write.mode("overwrite").parquet(config["output_path"])
+    # 3) Scrittura batch in Parquet (overwrite o append a piacere)
+    batch_df.write \
+        .mode("overwrite") \
+        .parquet(config["output_path"])
 
     spark.stop()
     print("Ingestione batch completata")
+    
 
 
