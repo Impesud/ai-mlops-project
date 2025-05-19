@@ -60,22 +60,21 @@ if __name__ == "__main__":
         f"s3://{raw_bucket}/"
     ], check=True)
 
-    # Prepara ambiente per PySpark via modulo pyspark
+    # Esegui Spark ingestion via python (usa la SparkSession di PySpark)
     env = os.environ.copy()
     env['PYSPARK_PYTHON'] = sys.executable
     env['PYSPARK_DRIVER_PYTHON'] = sys.executable
     print("Avvio fase di ingestione Spark...")
+    
+    print("Avvio fase di ingestione Spark via python...")
     try:
-        # Esegui ingest usando il modulo pyspark (cross-platform)
-        pkg = 'org.apache.hadoop:hadoop-aws:3.3.1'
-        cmd = [sys.executable, '-m', 'pyspark', '--packages', pkg, 'data_ingestion/ingest_spark.py']
-        subprocess.run(cmd, check=True, env=env)
+        subprocess.run([
+            sys.executable,
+            "data_ingestion/ingest_spark.py"
+        ], check=True, env=env)
     except subprocess.CalledProcessError as e:
         print(f"ERRORE: ingest_spark.py terminato con codice {e.returncode}")
         sys.exit(e.returncode)
-    except FileNotFoundError:
-        print("ERRORE: modulo pyspark non trovato. Installa pyspark nel venv.")
-        sys.exit(1)
 
     # Esegui training
     print("Avvio fase di training MLflow...")
