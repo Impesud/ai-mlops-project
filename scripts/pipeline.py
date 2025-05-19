@@ -60,38 +60,21 @@ if __name__ == "__main__":
         f"s3://{raw_bucket}/"
     ], check=True)
 
-    # Esegui Spark ingestion
-    print("Avvio fase di ingestione Spark...")
-    # Prepara ambiente per PySpark via venv
+    # Prepara ambiente per PySpark via modulo pyspark
     env = os.environ.copy()
-    venv_py = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Scripts', 'python.exe')
-    env['PYSPARK_PYTHON'] = venv_py
-    env['PYSPARK_DRIVER_PYTHON'] = venv_py
-    env['SPARK_DRIVER_PYTHON'] = venv_py
+    env['PYSPARK_PYTHON'] = sys.executable
+    env['PYSPARK_DRIVER_PYTHON'] = sys.executable
+    print("Avvio fase di ingestione Spark...")
     try:
-        # Avvia Spark use spark-submit from virtualenv
-        # Identifica spark-submit in venv Scripts
-        venv_dir = os.path.dirname(sys.executable)
-        spark_submit_venv = os.path.join(venv_dir, 'spark-submit.cmd') if os.name == 'nt' else os.path.join(venv_dir, 'spark-submit')
-        if not os.path.exists(spark_submit_venv):
-            print(f"ERRORE: '{spark_submit_venv}' non trovato. Installa pyspark nel venv per avere spark-submit.")
-            sys.exit(1)
-        # Aggiungi pacchetto Hadoop AWS per S3A support
+        # Esegui ingest usando il modulo pyspark (cross-platform)
         pkg = 'org.apache.hadoop:hadoop-aws:3.3.1'
-        cmd = [spark_submit_venv, '--packages', pkg, 'data_ingestion/ingest_spark.py']
-        subprocess.run(cmd, check=True, env=env)#([spark_submit_venv, 'data_ingestion/ingest_spark.py'], check=True, env=env)
+        cmd = [sys.executable, '-m', 'pyspark', '--packages', pkg, 'data_ingestion/ingest_spark.py']
+        subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as e:
         print(f"ERRORE: ingest_spark.py terminato con codice {e.returncode}")
-        if e.returncode == 127:
-            print("Tentativo fallback: eseguo ingest_spark.py con python del venv...")
-            subprocess.run([
-                sys.executable,
-                "data_ingestion/ingest_spark.py"
-            ], check=True, env=env)
-        else:
-            sys.exit(e.returncode)
+        sys.exit(e.returncode)
     except FileNotFoundError:
-        print("ERRORE: impossibile trovare il modulo pyspark. Assicurati che pyspark sia installato nel venv.")
+        print("ERRORE: modulo pyspark non trovato. Installa pyspark nel venv.")
         sys.exit(1)
 
     # Esegui training
