@@ -31,31 +31,22 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{config['aws']['region']}.amazonaws.com")
         .getOrCreate()
     )
-
-    # 2) Lettura streaming con schema
-    streaming_df = (
-        spark.readStream
-            .format(config["format"])
-            .option("header", "true")          # riconosce il primo header
-            .option("inferSchema", "true")     # inferisce i tipi, poi applica il schema
-            .schema(schema)                    # lo schema definito in partenza
-            .load(config["path"])
-            # filtra righe con event_time o value mancanti
-            .filter(col("event_time").isNotNull() & col("value").isNotNull())
-    )
     
-    # 3) Scrittura streaming
-    query = (
-        streaming_df.writeStream
-        .format("parquet")
-        .option("path", config["output_path"])
-        .option("checkpointLocation", config["checkpoint_location"])
-        .outputMode("append")
-        .trigger(once=True) # ← esegue un solo micro-batch e poi si ferma
-        .start()
+    # 2) Lettura batch con schema e pulizia
+    df = (
+        spark.read
+            .format(config["format"])
+            .option("header", "true")
+            .option("inferSchema", "true")
+            .schema(schema)
+            .load(config["path"])
     )
+    df = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
-    query.awaitTermination()
+    # 3) Scrittura batch in Parquet
+    df.write.mode("overwrite").parquet(config["output_path"])
+
     spark.stop()
-    print("Ingestione streaming completata")
+    print("Ingestione batch completata")
+
 
