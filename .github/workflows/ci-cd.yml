@@ -47,6 +47,8 @@ jobs:
         run: |
           $user = "$env:USERNAME"
           $path = "C:\tmp\hadoop-$user"
+          
+          New-Item -ItemType Directory -Path $path\s3a -Force
 
           # Crea la directory
           New-Item -ItemType Directory -Path $path -Force | Out-Null
