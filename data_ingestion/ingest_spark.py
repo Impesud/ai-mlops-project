@@ -46,9 +46,7 @@ if __name__ == "__main__":
 
     # 3) Scrittura batch
     print(f"Scrivo Parquet in {config['output_path']}")
-    cleaned.write.format("parquet") \
-    .mode("overwrite") \
-    .save(config["output_path"])
+    cleaned.write.mode("append").parquet(config['output_path'])
 
     spark.stop()
     print("Ingestione batch completata")
