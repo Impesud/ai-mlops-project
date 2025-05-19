@@ -26,6 +26,8 @@ if __name__ == "__main__":
         .appName("IngestioneBigData")
         .config("spark.hadoop.hadoop.tmp.dir", "C:\\tmp\\hadoop-runneradmin") 
         .config("spark.hadoop.hadoop.native.lib", "false")
+        .config("spark.executor.extraJavaOptions", "-Djava.library.path=") 
+        .config("spark.driver.extraJavaOptions", "-Djava.library.path=")
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
