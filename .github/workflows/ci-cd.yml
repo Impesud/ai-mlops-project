@@ -37,13 +37,14 @@ jobs:
         run: |
           # Crea la cartella e la sottocartella bin
           New-Item -ItemType Directory -Path C:\hadoop\bin -Force
+          New-Item -ItemType Directory -Path C:\tmp\hadoop-runneradmin -Force
 
-          # Scarica il binario raw (Hadoop 3.2.2)
+          # Scarica il binario raw (Hadoop 3.3.6)
           Invoke-WebRequest `
-            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.2.2/bin/winutils.exe `
+            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.6/bin/winutils.exe `
             -OutFile C:\hadoop\bin\winutils.exe
 
-      - name: Set HADOOP_HOME
+      - name: Set HADOOP_HOME and update PATH
         shell: pwsh
         run: |
           echo "HADOOP_HOME=C:\\hadoop" >> $env:GITHUB_ENV
