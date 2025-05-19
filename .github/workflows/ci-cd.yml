@@ -65,6 +65,12 @@ jobs:
         run: |
           echo "HADOOP_HOME=C:\\hadoop" >> $env:GITHUB_ENV
           echo "C:\\hadoop\\bin" >> $env:GITHUB_PATH
+      
+      - name: Test winutils.exe access
+        shell: pwsh
+        run: |
+          echo "Testing winutils..."
+          winutils.exe ls /tmp
 
       - name: Run tests
         run: |
