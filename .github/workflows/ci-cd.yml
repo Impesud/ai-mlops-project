@@ -31,16 +31,23 @@ jobs:
           pip install -r data_processing/requirements.txt
           pip install -r models/requirements.txt
           pip install pytest
-      
+  
       - name: Install winutils
+        shell: pwsh
         run: |
-          mkdir C:\hadoop
-          curl -L https://github.com/steveloughran/winutils/tree/master/hadoop-3.0.0/bin/winutils.exe -o C:\hadoop\bin\winutils.exe
+          # Crea la cartella e la sottocartella bin
+          New-Item -ItemType Directory -Path C:\hadoop\bin -Force
+
+          # Scarica il binario raw (Hadoop 3.3.1)
+          Invoke-WebRequest `
+            -Uri https://github.com/steveloughran/winutils/tree/master/hadoop-3.0.0/bin/winutils.exe `
+            -OutFile C:\hadoop\bin\winutils.exe
 
       - name: Set HADOOP_HOME
+        shell: pwsh
         run: |
-          echo "C:\hadoop" >> $GITHUB_ENV
-          echo "C:\hadoop\bin" >> $GITHUB_PATH
+          echo "HADOOP_HOME=C:\\hadoop" >> $env:GITHUB_ENV
+          echo "C:\\hadoop\\bin" >> $env:GITHUB_PATH
 
       - name: Run tests
         run: |
