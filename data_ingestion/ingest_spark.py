@@ -20,6 +20,7 @@ def load_config(path: str):
 
 if __name__ == "__main__":
     config = load_config("config.yaml")
+    print("DEBUG: config =", config)
 
     spark = (
         SparkSession.builder
