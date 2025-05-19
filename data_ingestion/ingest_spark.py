@@ -38,7 +38,6 @@ if __name__ == "__main__":
             .format(config["format"])
             .option("header", "true")          # riconosce il primo header
             .option("inferSchema", "true")     # inferisce i tipi, poi applica il schema
-            .option("maxFilesPerTrigger", "1")    # ← prende un solo file per micro-batch
             .schema(schema)                    # lo schema definito in partenza
             .load(config["path"])
             # filtra righe con event_time o value mancanti
@@ -56,7 +55,9 @@ if __name__ == "__main__":
         .start()
     )
 
-    query.awaitTermination(timeout=10000)
+   # Processa tutti i dati disponibili e poi ferma la query
+    query.processAllAvailable()   # esegue il micro-batch
+    query.stop()                 # ferma la query
     spark.stop()
     print("Ingestione streaming completata")
 
