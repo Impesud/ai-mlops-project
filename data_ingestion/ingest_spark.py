@@ -32,33 +32,25 @@ if __name__ == "__main__":
         .getOrCreate()
     )
 
-    # 2) Lettura streaming con schema
-    streaming_df = (
-        spark.readStream
+    # 2) Batch ingestion
+    print("Avvio batch ingestion Spark...")
+    df = (
+        spark.read
             .format(config["format"])
-            .option("header", "true")          # riconosce il primo header
-            .option("inferSchema", "true")     # inferisce i tipi, poi applica il schema
-            .schema(schema)                    # lo schema definito in partenza
+            .option("header", "true")
+            .option("inferSchema", "true")
+            .schema(schema)
             .load(config["path"])
-            # filtra righe con event_time o value mancanti
-            .filter(col("event_time").isNotNull() & col("value").isNotNull())
     )
-    
-    # 3) Scrittura streaming
-    query = (
-        streaming_df.writeStream
-        .format("parquet")
-        .option("path", config["output_path"])
-        .option("checkpointLocation", config["checkpoint_location"])
-        .outputMode("append")
-        .trigger(once=True) # ← esegue un solo micro-batch e poi si ferma
-        .start()
-    )
+    cleaned = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
-   # Processa tutti i dati disponibili e poi ferma la query
-    query.processAllAvailable()   # esegue il micro-batch
-    query.stop()                 # ferma la query
+    # 3) Scrittura batch
+    print(f"Scrivo Parquet in {config['output_path']}")
+    cleaned.write.format("parquet") \
+    .mode("overwrite") \
+    .save(config["output_path"])
+
     spark.stop()
-    print("Ingestione streaming completata")
+    print("Ingestione batch completata")
 
 

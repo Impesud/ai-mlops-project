@@ -70,7 +70,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest
 
   deploy-model:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build-and-test
     steps:
     - name: Install MLflow
