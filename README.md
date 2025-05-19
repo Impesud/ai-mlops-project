@@ -119,7 +119,7 @@ Accedi: [http://localhost:5000](http://localhost:5000) e seleziona l’esperimen
 
 1. **Feature engineering avanzato**: ora/giorno, weekend, aggregazioni per user_id.
 2. **Hyperparameter tuning**: Grid/RandomizedSearchCV su recall/F1 per class 1.
-3. **Deployment**: script `mlops/entrypoint.bash`, Docker image, Kubernetes Helm charts.
+3. **Deployment**: script `mlops/entrypoint.bat`, Docker image, Kubernetes Helm charts.
 4. **Generative AI full integration**: pipeline con prompt dinamici e artifact MLflow.
 5. **CI/CD**: completare test unitari, sonar scan, deploy in staging/prod.
 
