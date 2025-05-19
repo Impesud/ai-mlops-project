@@ -60,7 +60,7 @@ if __name__ == "__main__":
         f"s3://{raw_bucket}/"
     ], check=True)
 
-        # Esegui Spark ingestion
+    # Esegui Spark ingestion
     print("Avvio fase di ingestione Spark...")
     # Prepara ambiente per PySpark via venv
     env = os.environ.copy()
@@ -82,7 +82,14 @@ if __name__ == "__main__":
         subprocess.run(cmd, check=True, env=env)#([spark_submit_venv, 'data_ingestion/ingest_spark.py'], check=True, env=env)
     except subprocess.CalledProcessError as e:
         print(f"ERRORE: ingest_spark.py terminato con codice {e.returncode}")
-        sys.exit(e.returncode)
+        if e.returncode == 127:
+            print("Tentativo fallback: eseguo ingest_spark.py con python del venv...")
+            subprocess.run([
+                sys.executable,
+                "data_ingestion/ingest_spark.py"
+            ], check=True, env=env)
+        else:
+            sys.exit(e.returncode)
     except FileNotFoundError:
         print("ERRORE: impossibile trovare il modulo pyspark. Assicurati che pyspark sia installato nel venv.")
         sys.exit(1)
