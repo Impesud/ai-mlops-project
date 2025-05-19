@@ -25,9 +25,6 @@ if __name__ == "__main__":
         SparkSession.builder
         .appName("IngestioneBigData")
         .config("spark.hadoop.hadoop.tmp.dir", "C:\\tmp\\hadoop-runneradmin") 
-        .config("spark.hadoop.hadoop.native.lib", "false")
-        .config("spark.executor.extraJavaOptions", "-Djava.library.path=") 
-        .config("spark.driver.extraJavaOptions", "-Djava.library.path=")
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
@@ -35,6 +32,7 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{config['aws']['region']}.amazonaws.com")
         .getOrCreate()
     )
+    print("Hadoop version:", spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion())
 
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
