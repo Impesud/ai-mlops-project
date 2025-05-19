@@ -37,12 +37,26 @@ jobs:
         run: |
           # Crea la cartella e la sottocartella bin
           New-Item -ItemType Directory -Path C:\hadoop\bin -Force
-          New-Item -ItemType Directory -Path C:\tmp\hadoop-runneradmin -Force
 
           # Scarica il binario raw (Hadoop 3.3.6)
           Invoke-WebRequest `
             -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.6/bin/winutils.exe `
             -OutFile C:\hadoop\bin\winutils.exe
+      - name: Create and set permissions on Hadoop temp dir
+        shell: pwsh
+        run: |
+          $user = "$env:USERNAME"
+          $path = "C:\tmp\hadoop-$user"
+
+          # Crea la directory
+          New-Item -ItemType Directory -Path $path -Force | Out-Null
+
+          # Imposta i permessi di controllo completo all’utente corrente
+          $acl = Get-Acl $path
+          $permission = "$env:USERNAME","FullControl","ContainerInherit,ObjectInherit","None","Allow"
+          $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule $permission
+          $acl.SetAccessRule($accessRule)
+          Set-Acl -Path $path -AclObject $acl
 
       - name: Set HADOOP_HOME and update PATH
         shell: pwsh
