@@ -66,7 +66,6 @@ if __name__ == "__main__":
     env['PYSPARK_DRIVER_PYTHON'] = sys.executable
     print("Avvio fase di ingestione Spark...")
     
-    print("Avvio fase di ingestione Spark via python...")
     try:
         subprocess.run([
             sys.executable,

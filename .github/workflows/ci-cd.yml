@@ -40,7 +40,7 @@ jobs:
 
           # Scarica il binario raw (Hadoop 3.3.1)
           Invoke-WebRequest `
-            -Uri https://github.com/steveloughran/winutils/tree/master/hadoop-3.0.0/bin/winutils.exe `
+            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.6/bin/winutils.exe `
             -OutFile C:\hadoop\bin\winutils.exe
 
       - name: Set HADOOP_HOME
