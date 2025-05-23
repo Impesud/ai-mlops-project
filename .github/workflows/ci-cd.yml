@@ -1,3 +1,5 @@
+# .github/workflows/cd-ci.yml
+
 name: CI/CD Pipeline
 
 on:
@@ -8,9 +10,11 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout\@v4
+      - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -26,86 +30,63 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip setuptools
           pip install -r requirements.txt
-          pip install -r data_processing/requirements.txt
-          pip install -r models/requirements.txt
           pip install pytest
-  
-      - name: Install winutils
-        shell: pwsh
-        run: |
-          # Crea la cartella e la sottocartella bin
-          New-Item -ItemType Directory -Path C:\hadoop\bin -Force
-
-          # Scarica il binario raw (Hadoop 3.3.6)
-          Invoke-WebRequest `
-            -Uri https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.6/bin/winutils.exe `
-            -OutFile C:\hadoop\bin\winutils.exe
-      - name: Create and set permissions on Hadoop temp dir
-        shell: pwsh
-        run: |
-          $user = "$env:USERNAME"
-          $path = "C:\tmp\hadoop-$user"
-          
-          New-Item -ItemType Directory -Path $path\s3a -Force
-
-          # Crea la directory
-          New-Item -ItemType Directory -Path $path -Force | Out-Null
-
-          # Imposta i permessi di controllo completo all’utente corrente
-          $acl = Get-Acl $path
-          $permission = "$env:USERNAME","FullControl","ContainerInherit,ObjectInherit","None","Allow"
-          $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule $permission
-          $acl.SetAccessRule($accessRule)
-          Set-Acl -Path $path -AclObject $acl
-
-      - name: Set HADOOP_HOME and update PATH
-        shell: pwsh
-        run: |
-          echo "HADOOP_HOME=C:\\hadoop" >> $env:GITHUB_ENV
-          echo "C:\\hadoop\\bin" >> $env:GITHUB_PATH
-      
-      - name: Test winutils.exe access
-        shell: pwsh
-        run: |
-          echo "Testing winutils..."
-          winutils.exe ls /tmp
 
       - name: Run tests
         run: |
-          pytest tests/
+          source venv/bin/activate
+          pytest test/
 
-      - name: Data ingestion & Training
+      - name: Run pipeline (data ingest + training)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: eu-central-1
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          source venv/bin/activate
           python scripts/pipeline.py
 
       - name: Build Docker image
         run: |
           docker build -f mlops/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest .
+
       - name: Push Docker image
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest
 
   deploy-model:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build-and-test
+
     steps:
-    - name: Install MLflow
-      run: pip install mlflow
-    - name: Serve model
-      run: |
-          mlflow models serve -m runs:/${{ secrets.MODEL_RUN_ID }}/model --no-conda --port 1234 &
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install MLflow
+        run: |
+          pip install mlflow
+
+      - name: Serve model locally
+        run: |
+          nohup mlflow models serve -m runs:/${{ secrets.MODEL_RUN_ID }}/model --no-conda --port 1234 &
           sleep 10
-    - name: Test inference endpoint
-      run: |
-          curl -X POST http://localhost:1234/invocations \
+
+      - name: Test inference endpoint
+        run: |
+          curl -X POST http://127.0.0.1:1234/invocations \
             -H 'Content-Type: application/json' \
-            -d '{"dataframe_records":[{"value":42.0, "timestamp": 1684012800}]}'
-    - name: Deployment complete
-      run: echo "Model deployed and tested successfully"
+            -d '{"dataframe_records":[{"value":42.0, "timestamp":1684012800}]}'
+
+      - name: Deployment complete
+        run: echo "✅ Model deployed and tested successfully"

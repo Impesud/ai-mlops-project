@@ -1,6 +1,7 @@
 format: csv
 path: s3a://my-mlops-raw-data/
 output_path: s3a://my-mlops-processed-data/
+local_output_path: data/processed
 
 aws:
   access_key_id: ${AWS_ACCESS_KEY_ID}

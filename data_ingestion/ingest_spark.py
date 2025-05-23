@@ -23,8 +23,7 @@ if __name__ == "__main__":
 
     spark = (
         SparkSession.builder
-        .appName("IngestioneBigData")
-        .config("spark.hadoop.hadoop.tmp.dir", "C:\\tmp\\hadoop-runneradmin") 
+        .appName("IngestioneBigData") 
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
@@ -41,6 +40,7 @@ if __name__ == "__main__":
             .format(config["format"])
             .option("header", "true")
             .option("inferSchema", "true")
+            .option("sep", ",") 
             .schema(schema)
             .load(config["path"])
     )
@@ -49,6 +49,10 @@ if __name__ == "__main__":
     # 3) Scrittura batch
     print(f"Scrivo Parquet in {config['output_path']}")
     cleaned.write.mode("append").parquet(config['output_path'])
+    # Scrittura anche in locale (local_output_path)
+    local_path = config.get('local_output_path', 'data/processed')
+    print(f"Scrivo anche Parquet localmente in {local_path}")
+    cleaned.write.mode("overwrite").parquet(local_path)
 
     spark.stop()
     print("Ingestione batch completata")

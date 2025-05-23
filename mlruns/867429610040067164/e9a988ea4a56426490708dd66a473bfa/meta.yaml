@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/PROJECTS/ai-mlops-project/mlruns/867429610040067164/e9a988ea4a56426490708dd66a473bfa/artifacts
+end_time: 1747815342039
+entry_point_name: ''
+experiment_id: '867429610040067164'
+lifecycle_stage: active
+run_id: e9a988ea4a56426490708dd66a473bfa
+run_name: stately-ray-842
+run_uuid: e9a988ea4a56426490708dd66a473bfa
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747815339056
+status: 3
+tags: []
+user_id: root
