@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import yaml
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+from mlflow.models.signature import infer_signature
 
 # Carica configurazione
 def load_config(path="config.yaml"):
@@ -82,14 +84,14 @@ if __name__ == "__main__":
         # Log parametri
         mlflow.log_params(cfg['model_params'])
 
-        # Training del RandomForest con pesi di classe
+        # Training
         model = RandomForestClassifier(
             **cfg['model_params'],
             class_weight="balanced"
         )
         model.fit(X_res, y_res)
 
-        # 12) Valutazione Training e Test
+        # Valutazione
         train_preds = model.predict(X_train)
         train_acc = accuracy_score(y_train, train_preds)
         mlflow.log_metric('train_accuracy', train_acc)
@@ -105,18 +107,55 @@ if __name__ == "__main__":
         print("Confusion matrix (test):")
         print(confusion_matrix(y_test, test_preds))
 
-        # Salva il modello
-        mlflow.sklearn.log_model(model, 'model')
+        # Salva modello
+        X_res_safe = X_res.copy()
+        int_cols = X_res_safe.select_dtypes(include='int').columns
+        X_res_safe[int_cols] = X_res_safe[int_cols].astype('float64')
+        
+        signature = infer_signature(X_res_safe, model.predict(X_res_safe))
+        input_example = X_res[:5]
+
+        mlflow.sklearn.log_model(
+            model,
+            artifact_path='model',
+            input_example=input_example,
+            signature=signature
+        )
+
+        # Genera report con AI
+        prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
+        output_path = cfg.get("generative_ai", {}).get("output_path", "report.txt")
+
+        print(f"🧠 Genero report generativo con prompt: \"{prompt}\"")
+        try:
+            subprocess.run(
+                [sys.executable, "generative_ai/generate.py",
+                "--prompt", prompt,
+                "--output", output_path],
+                check=True,
+                text=True
+            )
+            mlflow.log_artifact(output_path)
+            print(f"✅ Report loggato su MLflow: {output_path}")
+        except Exception as e:
+            print(f"⚠️ Errore durante generazione/logging report: {e}")
 
     # 13) Arresta Spark
     spark.stop()
     print("Run MLflow completato.")
 
     # 14) Avvio MLflow UI in background
-    print("Avvio MLflow UI in background…")
-    subprocess.Popen([
-        sys.executable, "-m", "mlflow", "ui",
-        "--backend-store-uri", "./mlruns",
-        "--port", "5000"
-    ])
-    input("Premi Invio per chiudere MLflow UI e uscire…")
+    def avvia_mlflow_ui():
+        print("Avvio MLflow UI in background…")
+        subprocess.Popen([
+            sys.executable, "-m", "mlflow", "ui",
+            "--backend-store-uri", "./mlruns",
+            "--port", "5000"
+        ])
+        if sys.stdin.isatty():
+            input("Premi Invio per chiudere MLflow UI e uscire…")
+        else:
+            print("Esecuzione non interattiva: MLflow UI avviata in background senza attesa.")
+            time.sleep(3)  # breve attesa opzionale per sicurezza
+
+    avvia_mlflow_ui()

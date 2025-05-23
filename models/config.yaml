@@ -11,3 +11,9 @@ random_seed: 42
 model_params:
   n_estimators: 100
   max_depth: 10
+
+#Parametri del Generative AI
+generative_ai:
+  enabled: true
+  prompt: "Analisi dei dati"
+  output_path: "report.txt"

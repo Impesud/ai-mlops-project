@@ -1,6 +1,8 @@
 import argparse
 import os
+import pandas as pd
 from openai import OpenAI, RateLimitError, APIError
+
 
 def generate_text(prompt: str, output_file: str, dev_mode: bool = False):
     """
@@ -10,65 +12,71 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False):
     - Invoca l'API OpenAI per generare un'analisi testuale.
     - Salva l'output su file.
     """
-    # 1) Carica dati preprocessati
-    import pandas as pd
+    print("📊 Caricamento dati...")
     data_path = os.getenv("PROCESSED_DATA_PATH", "data/processed")
     try:
         df = pd.read_parquet(data_path)
+        print(f"Dati caricati da {data_path}")
     except Exception:
-        df = pd.read_csv(os.getenv("RAW_DATA_PATH", "data/raw-data/sample_raw_data.csv"))
+        fallback_path = os.getenv("RAW_DATA_PATH", "data/raw-data/sample_raw_data.csv")
+        df = pd.read_csv(fallback_path)
+        print(f"⚠️ Parquet non trovato. Fallback su CSV: {fallback_path}")
 
-    # 2) Calcola statistiche di base
+    # Statistiche di base
     total = len(df)
-    purchase_count = int((df['action']== 'purchase').sum())
+    purchase_count = int((df['action'] == 'purchase').sum())
     non_purchase = total - purchase_count
     value_stats = df['value'].describe().to_dict()
 
-    # 3) Prepara messaggio contestuale
+    # Costruzione del contesto
     summary = (
-        f"Dataset summary:"
-        f"- Total events: {total}"
-        f"- Purchase: {purchase_count}"
-        f"- Non-purchase: {non_purchase}"
-        f"- Value stats: {value_stats}"
+        f"# 📈 Dataset Summary\n"
+        f"- Totale eventi: {total}\n"
+        f"- Acquisti: {purchase_count}\n"
+        f"- Non-acquisti: {non_purchase}\n"
+        f"- Statistiche valore: {value_stats}\n\n"
     )
 
-    # 4) Costruisci prompt completo
-    full_prompt = summary + "User prompt: " + prompt
+    # Prompt per il modello
+    full_prompt = summary + f"# 🧠 Prompt Utente\n{prompt}\n"
 
-    # 5) Recupera API key
+    # API Key OpenAI
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key and not dev_mode:
-        raise ValueError("Missing OPENAI_API_KEY.")
+        raise ValueError("❌ Variabile OPENAI_API_KEY non trovata.")
 
-    # 6) Invoca LLM oppure fallback dev
+    # Generazione testo
     if dev_mode:
-        text = "[DEV MODE] Analysis simulated. " + summary
+        text = "[DEV MODE] Report simulato.\n\n" + full_prompt
     else:
         client = OpenAI(api_key=api_key)
         try:
+            print("🤖 Generazione AI in corso...")
             resp = client.chat.completions.create(
                 model="gpt-4.1",
-                messages=[{"role": "system", "content": "You are a data analyst."},
-                          {"role": "user", "content": full_prompt}],
+                messages=[
+                    {"role": "system", "content": "Sei un analista dati esperto."},
+                    {"role": "user", "content": full_prompt}
+                ],
                 max_tokens=500
             )
             text = resp.choices[0].message.content
         except RateLimitError:
-            raise RuntimeError("Rate limit exceeded. Riprova più tardi.")
+            raise RuntimeError("⚠️ Rate limit superato.")
         except APIError as e:
-            raise RuntimeError(f"OpenAI API error: {e}")
+            raise RuntimeError(f"❌ Errore API OpenAI: {e}")
 
-    # 7) Salva su file
+    # Scrittura del report su file
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(text)
+        f.write(f"# 📝 Report Generativo\n\n{full_prompt}\n## 📋 Output AI\n{text}\n")
 
-    print(f"Output saved to {output_file}")
+    print(f"✅ Report salvato in: {output_file}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--prompt', type=str, required=True)
-    parser.add_argument('--output', type=str, default='result.txt')
-    parser.add_argument('--dev-mode', action='store_true', help='Usa risposta simulata per test')
+    parser.add_argument('--output', type=str, default='report.txt')
+    parser.add_argument('--dev-mode', action='store_true', help='Usa modalità simulata (senza API)')
     args = parser.parse_args()
     generate_text(args.prompt, args.output, args.dev_mode)

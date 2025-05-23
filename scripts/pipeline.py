@@ -82,7 +82,6 @@ if __name__ == "__main__":
             [sys.executable, "models/train.py"],
             check=True,
             env=env,
-            capture_output=True,
             text=True
         )
         print(completed.stdout)
