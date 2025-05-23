@@ -4,7 +4,7 @@
 [![Spark](https://img.shields.io/badge/Spark-3.5.5-orange)](https://spark.apache.org/)
 [![Docker](https://img.shields.io/badge/docker-20.10-blue)](https://www.docker.com/)
 [![MLflow](https://img.shields.io/badge/MLflow-2.6.2-green)](https://mlflow.org/)
-[![Tests](https://github.com/impesud/ai-mlops-project/actions/workflows/python-tests.yml/badge.svg)](https://github.com/impesud/ai-mlops-project/actions/workflows/python-tests.yml)
+[![Tests](https://github.com/impesud/ai-mlops-project/actions/workflows/python-tests.yml/badge.svg)](https://github.com/impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
 
 Template di progetto per integrazione di Big Data, Data Cloud, MLOps e IA Generativa, **production-ready**.
 
