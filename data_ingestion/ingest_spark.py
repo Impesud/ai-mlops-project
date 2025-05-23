@@ -17,6 +17,8 @@ def load_config(path: str):
     full_path = os.path.join(base_dir, path)
     with open(full_path) as f:
         return yaml.safe_load(f)
+    
+os.environ["fs.s3a.connection.timeout"] = os.getenv("FS_S3A_CONNECTION_TIMEOUT", "60000")
 
 if __name__ == "__main__":
     config = load_config("config.yaml")
