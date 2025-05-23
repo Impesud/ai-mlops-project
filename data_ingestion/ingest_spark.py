@@ -35,6 +35,8 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.attempts.maximum", "3")
         .config("spark.hadoop.fs.s3a.retry.limit", "2")
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
+        .config("spark.driver.extraJavaOptions", "-Dfs.s3a.connection.timeout=60000")
+        .config("spark.executor.extraJavaOptions", "-Dfs.s3a.connection.timeout=60000")
         .getOrCreate()
     )
     print("Hadoop version:", spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion())
