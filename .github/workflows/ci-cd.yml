@@ -36,11 +36,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run tests
-        run: |
-          source venv/bin/activate
-          pytest tests/
-
       - name: Run pipeline (data ingest + training)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -50,6 +45,11 @@ jobs:
         run: |
           source venv/bin/activate
           python scripts/pipeline.py
+          
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          pytest tests/
 
       - name: Build Docker image
         run: |
