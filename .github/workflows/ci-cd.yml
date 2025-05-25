@@ -15,23 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Download and install Spark 3.5.5
-        run: |
-          wget https://downloads.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz
-          tar -xzf spark-3.5.5-bin-hadoop3.tgz
-          mv spark-3.5.5-bin-hadoop3 spark
-          echo "${{ github.workspace }}/spark/bin" >> $GITHUB_PATH
-          echo "SPARK_HOME=${{ github.workspace }}/spark" >> $GITHUB_ENV
-      
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
