@@ -1,0 +1,14 @@
+<configuration>
+  <property>
+    <name>fs.s3a.connection.timeout</name>
+    <value>60000</value>
+  </property>
+  <property>
+    <name>fs.s3a.connection.establish.timeout</name>
+    <value>5000</value>
+  </property>
+  <property>
+    <name>fs.s3a.socket.timeout</name>
+    <value>60000</value>
+  </property>
+</configuration>
