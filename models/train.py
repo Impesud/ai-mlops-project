@@ -32,7 +32,7 @@ if __name__ == "__main__":
     spark = (
         SparkSession.builder
         .appName("ModelTraining")
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.6")
+        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ['AWS_ACCESS_KEY_ID'])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ['AWS_SECRET_ACCESS_KEY'])
