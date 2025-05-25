@@ -35,13 +35,6 @@ jobs:
           pip install --upgrade pip setuptools
           pip install -r requirements.txt
           pip install pytest
-      
-      - name: Verifica configurazione Hadoop (core-site.xml)
-        run: |
-          export HADOOP_CONF_DIR=${{ github.workspace }}/conf
-          echo "📂 Contenuto conf/core-site.xml:"
-          cat $HADOOP_CONF_DIR/core-site.xml
-          echo "✅ Verifica HADOOP_CONF_DIR: $HADOOP_CONF_DIR"
 
       - name: Run pipeline (data ingest + training)
         env:
@@ -50,7 +43,6 @@ jobs:
           AWS_REGION: eu-central-1
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          export HADOOP_CONF_DIR=$GITHUB_WORKSPACE/conf
           source venv/bin/activate
           python scripts/pipeline.py
           
