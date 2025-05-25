@@ -6,7 +6,12 @@
 [![MLflow](https://img.shields.io/badge/MLflow-2.6.2-green)](https://mlflow.org/)
 [![Tests](https://github.com/impesud/ai-mlops-project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
 
-Template di progetto per integrazione di Big Data, Data Cloud, MLOps e IA Generativa, **production-ready**.
+🚀 **AI MLOps Project** – Pipeline completa di MLOps con Big Data, Spark, MLflow e Generative AI
+Integrazione pronta per la produzione: ingestion da S3 con Spark, training con MLflow tracking, report generativo LLM (OpenAI), test automatici con pytest, e CI/CD via GitHub Actions e Docker.
+
+✅ Compatibile con Ubuntu + GitHub Actions
+✅ Logging completo su MLflow (parametri, metriche, modelli, artifact)
+✅ Estensibile a cloud (AWS, Azure, GCP)
 
 ---
 
