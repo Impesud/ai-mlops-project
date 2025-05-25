@@ -35,6 +35,12 @@ jobs:
           pip install --upgrade pip setuptools
           pip install -r requirements.txt
           pip install pytest
+      
+      - name: Verifica configurazione Hadoop (core-site.xml)
+        run: |
+          echo "📂 Contenuto conf/core-site.xml:"
+          cat conf/core-site.xml
+          echo "✅ Verifica HADOOP_CONF_DIR: $HADOOP_CONF_DIR"
 
       - name: Run pipeline (data ingest + training)
         env:
