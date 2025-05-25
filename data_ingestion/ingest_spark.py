@@ -28,7 +28,7 @@ if __name__ == "__main__":
         .appName("MyApp")
         .config("spark.jars.packages", ",".join([
             "org.apache.hadoop:hadoop-aws:3.3.6",
-            "com.amazonaws:aws-java-sdk-bundle:1.12.367",
+            "com.amazonaws:aws-java-sdk-bundle:11.0.27",
             "org.wildfly.openssl:wildfly-openssl:1.1.3.Final"
         ]))
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
