@@ -24,18 +24,24 @@ if __name__ == "__main__":
     config = load_config("config.yaml")
 
     spark = (
-        SparkSession.builder
-        .appName("IngestioneBigData") 
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.6")
+    SparkSession.builder
+        .appName("SparkS3Ingestion")
+        .config("spark.jars.packages", ",".join([
+            "org.apache.hadoop:hadoop-aws:3.3.6",
+            "org.apache.hadoop:hadoop-common:3.3.6",
+            "org.apache.hadoop:hadoop-auth:3.3.6"
+        ]))
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
-        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{config['aws']['region']}.amazonaws.com")
-        .config("spark.hadoop.fs.s3a.path.style.access", "true") \
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+        # ⚠️ Usa millisecondi (non "60s") nei timeout
+        .config("spark.hadoop.fs.s3a.connection.timeout", "60000")
+        .config("spark.hadoop.fs.s3a.connection.establish.timeout", "5000")
+        .config("spark.hadoop.fs.s3a.socket.timeout", "60000")
         .getOrCreate()
     )
-    
-    spark.sparkContext._jsc.hadoopConfiguration().addResource("conf/core-site.xml")
     
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
