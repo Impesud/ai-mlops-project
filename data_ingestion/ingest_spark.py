@@ -31,10 +31,11 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{config['aws']['region']}.amazonaws.com")
-        .config("spark.hadoop.fs.s3a.connection.timeout", os.environ["fs.s3a.connection.timeout"]) 
         .getOrCreate()
     )
-    print("Hadoop version:", spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion())
+    
+    hadoop_conf = spark.sparkContext._jsc.hadoopConfiguration()
+    hadoop_conf.set("fs.s3a.connection.timeout", "60000")
 
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
