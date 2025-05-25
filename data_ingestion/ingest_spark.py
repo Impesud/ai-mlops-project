@@ -32,21 +32,7 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
-
-        # ✅ Timeout (numeri interi in millisecondi)
-        .config("spark.hadoop.fs.s3a.connection.timeout", "60000")
-        .config("spark.hadoop.fs.s3a.connection.establish.timeout", "5000")
-        .config("spark.hadoop.fs.s3a.socket.timeout", "60000")
-
-        # ✅ Autoscaling dinamico
-        .config("spark.dynamicAllocation.enabled", "true")
-        .config("spark.dynamicAllocation.minExecutors", "1")
-        .config("spark.dynamicAllocation.maxExecutors", "10")
-        .config("spark.dynamicAllocation.executorIdleTimeout", "60000")
-
-        # ✅ Altro tuning opzionale (se usi cluster dinamici)
-        .config("spark.shuffle.service.enabled", "true")
-
+        .config("spark.files.fetchTimeout", "120000")
         .getOrCreate()
     )
     
