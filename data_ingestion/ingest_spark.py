@@ -42,7 +42,7 @@ if __name__ == "__main__":
         .config("spark.dynamicAllocation.enabled", "true")
         .config("spark.dynamicAllocation.minExecutors", "1")
         .config("spark.dynamicAllocation.maxExecutors", "10")
-        .config("spark.dynamicAllocation.executorIdleTimeout", "60s")
+        .config("spark.dynamicAllocation.executorIdleTimeout", "60000")
 
         # ✅ Altro tuning opzionale (se usi cluster dinamici)
         .config("spark.shuffle.service.enabled", "true")
