@@ -25,14 +25,22 @@ if __name__ == "__main__":
 
     spark = (
         SparkSession.builder
-        .appName("AI-MLOps Ingestion")
-        # Hadoop AWS support
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
+        .appName("MyApp")
+        .config("spark.jars.packages", ",".join([
+            "org.apache.hadoop:hadoop-aws:3.3.6",
+            "com.amazonaws:aws-java-sdk-bundle:1.12.367",
+            "org.wildfly.openssl:wildfly-openssl:1.1.3.Final"
+        ]))
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
-        .config("spark.files.fetchTimeout", "120000")
+        # Timeout settings
+        .config("spark.hadoop.fs.s3a.connection.timeout", "60000")
+        .config("spark.hadoop.fs.s3a.connection.establish.timeout", "5000")
+        .config("spark.hadoop.fs.s3a.socket.timeout", "60000")
+        .config("spark.files.fetchTimeout", "60000")  
         .getOrCreate()
     )
     
