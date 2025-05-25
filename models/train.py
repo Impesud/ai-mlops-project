@@ -78,7 +78,8 @@ if __name__ == "__main__":
         print("imbalanced-learn non installato: procedo con dati originali")
         X_res, y_res = X_train, y_train
 
-    # 11) Inizializza MLflow e avvia run
+    # 11) Inizializza MLflow Tracking locale
+    mlflow.set_tracking_uri("file:./mlruns")
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
@@ -106,9 +107,6 @@ if __name__ == "__main__":
         print(classification_report(y_test, test_preds))
         print("Confusion matrix (test):")
         print(confusion_matrix(y_test, test_preds))
-
-        # Imposta MLflow tracking URI relativo, compatibile con GitHub Actions
-        mlflow.set_tracking_uri("file:./mlruns")
 
         # Salva modello
         X_res_safe = X_res.copy()
