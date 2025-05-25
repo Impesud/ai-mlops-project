@@ -23,9 +23,10 @@ os.environ["fs.s3a.connection.timeout"] = os.getenv("FS_S3A_CONNECTION_TIMEOUT",
 if __name__ == "__main__":
     config = load_config("config.yaml")
 
+try:
     spark = (
         SparkSession.builder
-        .appName("MyApp")
+        .appName("Batch Ingestion")
         .config("spark.jars.packages", ",".join([
             "org.apache.hadoop:hadoop-aws:3.3.6",
             "com.amazonaws:aws-java-sdk-bundle:1.12.367",
@@ -43,6 +44,9 @@ if __name__ == "__main__":
         .config("spark.files.fetchTimeout", "60000")  
         .getOrCreate()
     )
+except Exception as e:
+    print("⚠️ Spark configurazione non valida, procedo con default:", e)
+    spark = SparkSession.builder.appName("Batch Ingestion").getOrCreate()
     
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
