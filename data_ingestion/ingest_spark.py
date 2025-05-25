@@ -36,6 +36,8 @@ if __name__ == "__main__":
     
     hadoop_conf = spark.sparkContext._jsc.hadoopConfiguration()
     hadoop_conf.set("fs.s3a.connection.timeout", "60000")
+    hadoop_conf.set("fs.s3a.connection.establish.timeout", "5000")
+    hadoop_conf.set("fs.s3a.socket.timeout", "60000")
 
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
