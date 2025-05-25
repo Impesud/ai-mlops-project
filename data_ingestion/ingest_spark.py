@@ -24,22 +24,29 @@ if __name__ == "__main__":
     config = load_config("config.yaml")
 
     spark = (
-    SparkSession.builder
-        .appName("SparkS3Ingestion")
-        .config("spark.jars.packages", ",".join([
-            "org.apache.hadoop:hadoop-aws:3.3.6",
-            "org.apache.hadoop:hadoop-common:3.3.6",
-            "org.apache.hadoop:hadoop-auth:3.3.6"
-        ]))
+        SparkSession.builder
+        .appName("AI-MLOps Ingestion")
+        # Hadoop AWS support
+        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.6")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
-        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-        # ⚠️ Usa millisecondi (non "60s") nei timeout
+
+        # ✅ Timeout (numeri interi in millisecondi)
         .config("spark.hadoop.fs.s3a.connection.timeout", "60000")
         .config("spark.hadoop.fs.s3a.connection.establish.timeout", "5000")
         .config("spark.hadoop.fs.s3a.socket.timeout", "60000")
+
+        # ✅ Autoscaling dinamico
+        .config("spark.dynamicAllocation.enabled", "true")
+        .config("spark.dynamicAllocation.minExecutors", "1")
+        .config("spark.dynamicAllocation.maxExecutors", "10")
+        .config("spark.dynamicAllocation.executorIdleTimeout", "60s")
+
+        # ✅ Altro tuning opzionale (se usi cluster dinamici)
+        .config("spark.shuffle.service.enabled", "true")
+
         .getOrCreate()
     )
     
