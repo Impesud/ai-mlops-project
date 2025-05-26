@@ -109,23 +109,27 @@ if __name__ == "__main__":
         print("Confusion matrix (test):")
         print(confusion_matrix(y_test, test_preds))
 
-        # Salva modello
-        #X_res_safe = X_res.copy()
-        #int_cols = X_res_safe.select_dtypes(include='int').columns
-        #X_res_safe[int_cols] = X_res_safe[int_cols].astype('float64')
-        
-        #signature = infer_signature(X_res_safe, model.predict(X_res_safe))
-        #input_example = X_res[:5]
+        # Controlla se stiamo eseguendo su GitHub Actions
+        on_github_actions = os.environ.get("GITHUB_ACTIONS", "false") == "true"
 
-        #mlflow.sklearn.log_model(
-        #    model,
-        #    artifact_path='model',
-        #    input_example=input_example,
-        #    signature=signature
-        #)#
-        
-        # Salva il modello
-        mlflow.sklearn.log_model(model, 'model') 
+        if not on_github_actions:
+            # Siamo in locale: includi signature e input_example
+            X_res_safe = X_res.copy()
+            int_cols = X_res_safe.select_dtypes(include='int').columns
+            X_res_safe[int_cols] = X_res_safe[int_cols].astype('float64')
+
+            signature = infer_signature(X_res_safe, model.predict(X_res_safe))
+            input_example = X_res[:5]
+
+            mlflow.sklearn.log_model(
+                model,
+                artifact_path='model',
+                input_example=input_example,
+                signature=signature
+            )
+        else:
+            # Su GitHub Actions: log semplificato senza signature
+            mlflow.sklearn.log_model(model, artifact_path='model')
 
         # Genera report con AI
         prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
