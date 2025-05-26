@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 import yaml
-import time
+import tempfile
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from sklearn.model_selection import train_test_split
@@ -80,11 +80,9 @@ if __name__ == "__main__":
 
     # 11) Inizializza MLflow Tracking locale
     # Forza tracking URI per GitHub Actions
-    tracking_uri = "file:./mlruns"
-    artifact_path_root = "./mlruns"
+    mlflow.set_tracking_uri("file:./mlruns")
 
     # Prepara cartella artifact
-    os.makedirs("mlruns", exist_ok=True)
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
@@ -121,12 +119,24 @@ if __name__ == "__main__":
         signature = infer_signature(X_res_safe, model.predict(X_res_safe))
         input_example = X_res[:5]
 
-        mlflow.sklearn.log_model(
-            model,
-            artifact_path='model',
-            input_example=input_example,
-            signature=signature
-        )
+        #mlflow.sklearn.log_model(
+        #    model,
+        #   artifact_path='model',
+        #    input_example=input_example,
+        #    signature=signature
+        #)
+        
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            local_model_path = os.path.join(tmp_dir, "model")
+            mlflow.sklearn.save_model(
+                sk_model=model,
+                path=local_model_path,
+                input_example=input_example,
+                signature=signature
+            )
+
+            # Logga manualmente nella directory artifact della run corrente
+            mlflow.log_artifacts(local_model_path, artifact_path="model")
 
         # Genera report con AI
         prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
