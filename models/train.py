@@ -80,8 +80,8 @@ if __name__ == "__main__":
 
     # 11) Inizializza MLflow Tracking locale
     # Forza tracking URI per GitHub Actions
-    tracking_dir = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
-    mlflow.set_tracking_uri(tracking_dir)
+    tracking_uri = "file:./mlruns"
+    artifact_path_root = "./mlruns"
 
     # Prepara cartella artifact
     os.makedirs("mlruns", exist_ok=True)
