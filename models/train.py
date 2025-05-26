@@ -79,7 +79,7 @@ if __name__ == "__main__":
         X_res, y_res = X_train, y_train
 
     # 11) Inizializza MLflow Tracking locale
-
+    mlflow.set_tracking_uri("file:./mlruns")
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
