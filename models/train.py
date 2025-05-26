@@ -134,6 +134,10 @@ if __name__ == "__main__":
                 input_example=input_example,
                 signature=signature
             )
+            
+            # Verifica che la cartella artifact esista
+            artifact_root = os.path.join(".", "mlruns", "artifacts")
+            os.makedirs(artifact_root, exist_ok=True)
 
             # Logga manualmente nella directory artifact della run corrente
             mlflow.log_artifacts(local_model_path, artifact_path="model")
