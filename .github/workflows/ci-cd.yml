@@ -49,6 +49,9 @@ jobs:
         run: |
           source venv/bin/activate
           python scripts/pipeline.py
+      
+      - name: List artifacts
+        run: find mlruns
 
       - name: Run tests
         run: |
@@ -92,7 +95,7 @@ jobs:
 
       - name: Serve model locally
         run: |
-          nohup mlflow models serve -m file://mlruns/0/xxxxxxxxxxxxxxx/artifacts/model --no-conda --port 1234 &
+          nohup mlflow models serve -m ./model-dir --no-conda --port 1234 &
           sleep 10
 
       - name: Test inference endpoint
