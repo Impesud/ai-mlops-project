@@ -37,7 +37,7 @@ jobs:
           pip install pytest
 
       - name: Prepara directory per MLflow
-        run: mkdir -p mlruns/artifacts
+        run: mkdir -p mlruns
     
       - name: Set environment variable for MLflow
         run: echo "MLFLOW_TRACKING_URI=file:./mlruns" >> $GITHUB_ENV
