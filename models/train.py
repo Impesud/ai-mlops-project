@@ -121,10 +121,10 @@ if __name__ == "__main__":
         #    artifact_path='model',
         #    input_example=input_example,
         #    signature=signature
-        #)
+        #)#
         
         # Salva il modello
-        mlflow.sklearn.log_model(model, 'model')
+        mlflow.sklearn.log_model(model, 'model') 
 
         # Genera report con AI
         prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
