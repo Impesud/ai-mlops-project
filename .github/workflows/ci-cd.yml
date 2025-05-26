@@ -1,5 +1,3 @@
-# .github/workflows/cd-ci.yml
-
 name: CI/CD Pipeline
 
 on:
@@ -38,7 +36,7 @@ jobs:
 
       - name: Prepara directory per MLflow
         run: mkdir -p mlruns
-    
+
       - name: Set environment variable for MLflow
         run: echo "MLFLOW_TRACKING_URI=file:./mlruns" >> $GITHUB_ENV
 
@@ -51,11 +49,18 @@ jobs:
         run: |
           source venv/bin/activate
           python scripts/pipeline.py
-          
+
       - name: Run tests
         run: |
           source venv/bin/activate
           pytest tests/
+
+      - name: Upload trained model artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-model
+          path: |
+            mlruns/**/artifacts/model
 
       - name: Build Docker image
         run: |
@@ -71,8 +76,11 @@ jobs:
     needs: build-and-test
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download trained model artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: trained-model
+          path: ./model-dir
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -80,12 +88,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install MLflow
-        run: |
-          pip install mlflow
+        run: pip install mlflow
 
       - name: Serve model locally
         run: |
-          nohup mlflow models serve -m runs:/${{ secrets.MODEL_RUN_ID }}/model --no-conda --port 1234 &
+          nohup mlflow models serve -m ./model-dir --no-conda --port 1234 &
           sleep 10
 
       - name: Test inference endpoint
