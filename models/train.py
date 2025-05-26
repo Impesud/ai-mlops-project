@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 import yaml
-import tempfile
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from sklearn.model_selection import train_test_split
@@ -79,10 +79,7 @@ if __name__ == "__main__":
         X_res, y_res = X_train, y_train
 
     # 11) Inizializza MLflow Tracking locale
-    # Forza tracking URI per GitHub Actions
-    mlflow.set_tracking_uri("file:./mlruns")
 
-    # Prepara cartella artifact
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
@@ -112,35 +109,22 @@ if __name__ == "__main__":
         print(confusion_matrix(y_test, test_preds))
 
         # Salva modello
-        X_res_safe = X_res.copy()
-        int_cols = X_res_safe.select_dtypes(include='int').columns
-        X_res_safe[int_cols] = X_res_safe[int_cols].astype('float64')
+        #X_res_safe = X_res.copy()
+        #int_cols = X_res_safe.select_dtypes(include='int').columns
+        #X_res_safe[int_cols] = X_res_safe[int_cols].astype('float64')
         
-        signature = infer_signature(X_res_safe, model.predict(X_res_safe))
-        input_example = X_res[:5]
+        #signature = infer_signature(X_res_safe, model.predict(X_res_safe))
+        #input_example = X_res[:5]
 
         #mlflow.sklearn.log_model(
         #    model,
-        #   artifact_path='model',
+        #    artifact_path='model',
         #    input_example=input_example,
         #    signature=signature
         #)
         
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            local_model_path = os.path.join(tmp_dir, "model")
-            mlflow.sklearn.save_model(
-                sk_model=model,
-                path=local_model_path,
-                input_example=input_example,
-                signature=signature
-            )
-            
-            # Verifica che la cartella artifact esista
-            artifact_root = os.path.join(".", "mlruns", "artifacts")
-            os.makedirs(artifact_root, exist_ok=True)
-
-            # Logga manualmente nella directory artifact della run corrente
-            mlflow.log_artifacts(local_model_path, artifact_path="model")
+        # Salva il modello
+        mlflow.sklearn.log_model(model, 'model')
 
         # Genera report con AI
         prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
