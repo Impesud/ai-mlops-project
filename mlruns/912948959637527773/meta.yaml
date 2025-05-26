@@ -1,0 +1,6 @@
+artifact_location: file:///home/ML/ai-mlops-project/mlruns/912948959637527773
+creation_time: 1748270566768
+experiment_id: '912948959637527773'
+last_update_time: 1748270566768
+lifecycle_stage: active
+name: my-experiment

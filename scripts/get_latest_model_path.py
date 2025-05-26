@@ -2,10 +2,10 @@ import os
 import glob
 
 # Cerca tutti i modelli MLflow salvati
-matches = glob.glob("mlruns/*/*/artifacts/model/MLmodel", recursive=True)
+matches = glob.glob("mlruns/*/*/artifacts/model/", recursive=True)
 
 if not matches:
-    raise FileNotFoundError("❌ Nessun modello MLflow trovato in mlruns/*/*/artifacts/model/MLmodel")
+    raise FileNotFoundError("❌ Nessun modello MLflow trovato in mlruns/*/*/artifacts/model/")
 
 # Ordina per modifica più recente
 latest_model = max(matches, key=os.path.getmtime)
