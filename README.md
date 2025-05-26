@@ -29,6 +29,13 @@ Integrazione pronta per la produzione: ingestion da S3 con Spark, training con M
 
 ---
 
+## 🔍 Modello e Pipeline di Addestramento
+Partendo da un file CSV sintetico, il progetto esegue un job batch di ingestione tramite Apache Spark e successivamente una pipeline di feature engineering minimale in Pandas. Il dato preprocessato viene utilizzato per addestrare un classificatore Random Forest su un problema di classificazione binaria: acquisto vs non-acquisto (purchase vs non-purchase).
+
+Il modello finale è in grado di predire, per ogni singolo evento con le sue feature (inclusi value e timestamp), se si tratta di un acquisto (1) oppure di un'azione diversa (0, ad esempio click, view o signup).
+
+---
+
 ## 🔧 Prerequisiti
 
 * **Python** 3.8+ (consigliato 3.10 o 3.11)

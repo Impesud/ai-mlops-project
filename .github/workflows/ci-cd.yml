@@ -91,9 +91,10 @@ jobs:
         run: pip install mlflow pandas
 
       - name: Get latest model path
-        id: get_model_path
+        id: model-path
         run: |
           MODEL_PATH=$(python scripts/get_latest_model_path.py)
+          echo "MODEL_PATH=$MODEL_PATH"
           echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
 
       - name: Serve model locally
