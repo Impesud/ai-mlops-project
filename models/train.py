@@ -78,7 +78,7 @@ if __name__ == "__main__":
         print("imbalanced-learn non installato: procedo con dati originali")
         X_res, y_res = X_train, y_train
 
-    # 11) Inizializza MLflow Tracking locale
+    # 11) Inizializza MLflow e run
     mlflow.set_tracking_uri("file:./mlruns")
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
