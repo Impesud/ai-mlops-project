@@ -79,23 +79,26 @@ jobs:
     needs: build-and-test
 
     steps:
-      - name: Download trained model artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: trained-model
-          path: ./model-dir
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install MLflow
-        run: pip install mlflow
+      - name: Install dependencies for MLflow
+        run: pip install mlflow pandas
+
+      - name: Get latest model path
+        id: get_model_path
+        run: |
+          MODEL_PATH=$(python scripts/get_latest_model_path.py)
+          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_ENV
 
       - name: Serve model locally
         run: |
-          nohup mlflow models serve -m ./model-dir --no-conda --port 1234 &
+          nohup mlflow models serve -m $MODEL_PATH --no-conda --port 1234 &
           sleep 10
 
       - name: Test inference endpoint
@@ -106,3 +109,4 @@ jobs:
 
       - name: Deployment complete
         run: echo "✅ Model deployed and tested successfully"
+
