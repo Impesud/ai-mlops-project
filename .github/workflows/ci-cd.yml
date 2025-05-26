@@ -35,6 +35,9 @@ jobs:
           pip install --upgrade pip setuptools
           pip install -r requirements.txt
           pip install pytest
+          
+      - name: Create mlruns directory
+        run: mkdir -p mlruns
 
       - name: Run pipeline (data ingest + training)
         env:
