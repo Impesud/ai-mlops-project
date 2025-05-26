@@ -79,7 +79,12 @@ if __name__ == "__main__":
         X_res, y_res = X_train, y_train
 
     # 11) Inizializza MLflow Tracking locale
-    mlflow.set_tracking_uri("file:./mlruns")
+    # Forza tracking URI per GitHub Actions
+    tracking_dir = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
+    mlflow.set_tracking_uri(tracking_dir)
+
+    # Prepara cartella artifact
+    os.makedirs("mlruns", exist_ok=True)
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
