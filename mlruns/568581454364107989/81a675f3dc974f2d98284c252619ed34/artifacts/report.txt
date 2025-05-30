@@ -1,0 +1,46 @@
+# 📝 Report Generativo
+
+# 📈 Dataset Summary
+- Totale eventi: 97000
+- Acquisti: 14675
+- Non-acquisti: 82325
+- Statistiche valore: {'count': 97000.0, 'mean': 49.995937263050884, 'std': 15.42481769310224, 'min': -9.219993748094353, '25%': 39.68823704896406, '50%': 49.988325959865435, '75%': 60.23569936078749, 'max': 118.76527786925202}
+
+# 🧠 Prompt Utente
+Analisi dei dati
+
+## 📋 Output AI
+Ecco un’**analisi sintetica** del tuo dataset, basata sulle statistiche fornite:
+
+---
+
+### 1. **Composizione degli Eventi**
+- **Totale eventi registrati:** **97.000**
+- **Acquisti effettuati:** **14.675**
+  - **% sul totale:** ≈ **15,1%**
+- **Non-acquisti:** **82.325**
+  - **% sul totale:** ≈ **84,9%**
+- **Conclusione:** il dataset è sbilanciato verso i non-acquisti, con una conversione (acquisti/eventi totali) relativamente bassa.
+
+---
+
+### 2. **Analisi del Valore (probabilmente valore di acquisto o valore associato all’evento)**
+- **Media:** ≈ **50**
+- **Deviazione Standard:** ≈ **15,42**
+- **Minimo:** **-9,22**
+- **Massimo:** **118,77**
+- **Mediana (50° percentile):** ≈ **49,99**
+- **1° quartile (25%):** ≈ **39,69**
+- **3° quartile (75%):** ≈ **60,24**
+
+**Interpretazioni:**
+- La **distribuzione è centrata intorno a 50**, con la maggior parte dei valori compresa tra **~39,7** (Q1) e **~60,2** (Q3).
+- **Valori minimi negativi**: può indicare dati anomali, errori di raccolta oppure casi specifici (es: resi, cashback, rimborsi).
+- La **deviazione standard** è significativa rispetto alla media, suggerendo una moderata variabilità nei valori degli eventi.
+
+---
+
+### 3. **Spunti e Azioni Consigliate**
+- **Analizzare i valori negativi**: Comprendere da dove provengono e se devono essere rimossi, trasformati o analizzati separatamente.
+- **Distribuzione sbilanciata**: Se vuoi costruire modelli predittivi (es. classificare chi acquista), valuta tecniche di bilanciamento (es. oversampling, undersampling) o metriche appropriate (ROC-AUC invece di accuracy se la classe “acquisto” è minoritaria).
+- **Segmentazione**: Appro

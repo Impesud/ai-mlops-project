@@ -1,0 +1,54 @@
+# 📝 Report Generativo
+
+# 📈 Dataset Summary
+- Totale eventi: 97000
+- Acquisti: 14675
+- Non-acquisti: 82325
+- Statistiche valore: {'count': 97000.0, 'mean': 49.995937263050884, 'std': 15.42481769310224, 'min': -9.219993748094353, '25%': 39.68823704896406, '50%': 49.988325959865435, '75%': 60.23569936078749, 'max': 118.76527786925202}
+
+# 🧠 Prompt Utente
+Analisi dei dati
+
+## 📋 Output AI
+Ecco un’**analisi dei dati** sulla base delle informazioni fornite:
+
+---
+
+## 📊 Analisi generale
+
+### 1. Volume degli eventi
+- **Totale eventi:** 97.000
+- **Acquisti:** 14.675 (~15,1% del totale)
+- **Non-acquisti:** 82.325 (~84,9% del totale)
+
+**Osservazione:**  
+C’è una forte preponderanza di eventi senza acquisto. Un tasso di acquisto intorno al 15% è tipico di funnel ampi (ad es. traffico sito vs. conversioni).
+
+---
+
+### 2. Statistiche del valore (`valore`)
+| Statistica | Valore                 |
+|:-----------|:-----------------------|
+| count      | 97.000                 |
+| mean       | 50,00                  |
+| std        | 15,42                  |
+| min        | -9,22                  |
+| 25%        | 39,69                  |
+| 50%        | 49,99                  |
+| 75%        | 60,24                  |
+| max        | 118,77                 |
+
+#### **Distribuzione:**
+- **Media e mediana** vicine (~50), suggerendo una distribuzione abbastanza simmetrica.
+- **Intervallo interquartile (IQR):** 60,24 - 39,69 = **20,55** → Discreta variabilità tra 25° e 75° percentile.
+- **Deviazione standard:** Alta (15,42) rispetto alla media → presenza di valori lontani dalla media.
+- **Minimo negativo (-9,22):** Potenziale outlier o errore nei dati (i valori negativi, se non giustificati, andrebbero indagati).
+- **Massimo elevato (118,77):** Potenziali outlier o casi speciali.
+
+---
+
+### 3. Possibili approfondimenti
+
+- **Distribuzione valore per acquisto**: sarebbe utile calcolare media, mediana e varianza del valore separatamente per eventi di acquisto e non (spesso i non-acquisti hanno valore nullo o molto basso).
+- **Valori negativi:** Da approfondire: rappresentano rimborsi, errori o tipologia particolare di evento?
+- **Acquisti elevati:** Gli acquisti di

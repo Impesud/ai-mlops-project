@@ -1,0 +1,47 @@
+# 📝 Report Generativo
+
+# 📈 Dataset Summary
+- Totale eventi: 95000
+- Acquisti: 14191
+- Non-acquisti: 80809
+- Statistiche valore: {'count': 95000.0, 'mean': 49.99193783700985, 'std': 14.981191955764867, 'min': -9.219993748094353, '25%': 39.84421145490318, '50%': 49.98241138960206, '75%': 60.08610955766399, 'max': 118.76527786925202}
+
+# 🧠 Prompt Utente
+Analisi dei dati
+
+## 📋 Output AI
+Ecco una **analisi descrittiva** basata sui dati che hai fornito:
+
+---
+
+## 📊 **1. Distribuzione Eventi**
+- **Totale eventi:** **95.000**
+- **Acquisti:** **14.191** (≈14,9%)
+- **Non-acquisti:** **80.809** (≈85,1%)
+
+La maggior parte degli eventi non si traduce in un acquisto. Il tasso di conversione è **14,9%**, un valore abbastanza tipico in scenari dove l’acquisto rappresenta l’obiettivo principale (es. e-commerce).
+
+---
+
+## 💰 **2. Statistiche Valore**
+| Statistica        | Valore           |
+|-------------------|-----------------|
+| **Media**         | 49,99           |
+| **Deviazione Std**| 14,98           |
+| **Minimo**        | -9,22           |
+| **1° Quartile**   | 39,84           |
+| **Mediana**       | 49,98           |
+| **3° Quartile**   | 60,09           |
+| **Massimo**       | 118,77          |
+
+- **Distribuzione centrata:** la **media** e la **mediana** sono quasi identiche, suggerendo una distribuzione simmetrica.
+- **Dispersione:** la **deviazione standard** di 15 circa segnala una significativa variabilità del valore tra gli eventi.
+- **Outlier:** Il valore **minimo** negativo (-9,22) è anomalo e potrebbe essere dovuto a errori di registrazione, rimborsi o bug nei dati. Andrebbe indagato.
+- **Range significativo:** Il valore massimo (≈119) è più del doppio della media; esistono quindi acquisti (o eventi) con importo ben superiore alla media.
+
+---
+
+## 🔎 **3. Spunti e Raccomandazioni**
+1. **Valori Negativi:** Analizza la causa dei valori negativi per il campo "valore". Sono rimborsi? Errori?
+2. **Segmentazione:** Considera di separare le statistiche tra acquisti e non-acquisti per identificare differenze nel valore medio, deviazione, etc.
+3. **Outlier:** Verifica se i valori estremi (sia bassi che alti)

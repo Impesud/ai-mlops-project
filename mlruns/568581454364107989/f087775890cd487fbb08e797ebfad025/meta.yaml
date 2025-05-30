@@ -1,0 +1,15 @@
+artifact_uri: file:///home/ML/ai-mlops-project/mlruns/568581454364107989/f087775890cd487fbb08e797ebfad025/artifacts
+end_time: 1748616868292
+entry_point_name: ''
+experiment_id: '568581454364107989'
+lifecycle_stage: active
+run_id: f087775890cd487fbb08e797ebfad025
+run_name: chill-roo-619
+run_uuid: f087775890cd487fbb08e797ebfad025
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748616855006
+status: 3
+tags: []
+user_id: root

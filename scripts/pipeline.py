@@ -1,12 +1,10 @@
 # scripts/pipeline.py
-# Pipeline di orchestrazione end-to-end: verifica CSV raw, crea bucket, sync CSV raw, ingest, train
 import os
 import sys
 import subprocess
 import boto3
 import yaml
 
-# Carica la configurazione da project_root/data_ingestion/config.yaml
 def load_config(path="data_ingestion/config.yaml"):
     scripts_dir = os.path.dirname(__file__)
     project_root = os.path.dirname(scripts_dir)
@@ -17,7 +15,6 @@ def load_config(path="data_ingestion/config.yaml"):
     with open(config_path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
-# Verifica o crea un bucket S3
 def ensure_bucket(s3_client, bucket_name, region):
     try:
         s3_client.head_bucket(Bucket=bucket_name)
@@ -30,29 +27,28 @@ def ensure_bucket(s3_client, bucket_name, region):
         )
 
 if __name__ == "__main__":
-    # Caricamento config
     cfg = load_config()
+    mode = cfg.get("mode", "dev")
     region = cfg['aws']['region']
-    raw_bucket = cfg['path'].replace('s3a://','').rstrip('/')
+    
+    # Percorso file dinamico (dev o prod)
+    local_csv = cfg[cfg['mode']]['path']
+    s3_path = cfg['s3_path']
+    raw_bucket = s3_path.replace('s3a://', '').rstrip('/')
     proc_bucket = cfg['output_path'].replace('s3a://','').rstrip('/')
 
-    # Verifica presenza file CSV raw di test
-    sample_csv = os.path.join('data', 'raw-data', 'sample_raw_data.csv')
-    if not os.path.exists(sample_csv):
-        print("ERRORE: file 'sample_raw_data.csv' non presente in data/raw-data/")
+    if not os.path.exists(local_csv):
+        print(f"ERRORE: file CSV non trovato in {local_csv}")
         sys.exit(1)
     else:
-        print(f"Trovato file di input: {sample_csv}")
+        print(f"Trovato file di input: {local_csv}")
 
-    # Inizializza client S3
     session = boto3.Session(profile_name=os.environ.get('AWS_PROFILE'), region_name=region)
     s3 = session.client('s3')
 
-    # Assicura bucket raw e processed
     ensure_bucket(s3, raw_bucket, region)
     ensure_bucket(s3, proc_bucket, region)
 
-    # Sincronizza dati raw su S3
     print(f"Sincronizzo data/raw-data/ su s3://{raw_bucket}/")
     subprocess.run([
         "aws", "s3", "sync",
@@ -60,12 +56,11 @@ if __name__ == "__main__":
         f"s3://{raw_bucket}/"
     ], check=True)
 
-    # Esegui Spark ingestion via python (usa la SparkSession di PySpark)
     env = os.environ.copy()
     env['PYSPARK_PYTHON'] = sys.executable
     env['PYSPARK_DRIVER_PYTHON'] = sys.executable
     print("Avvio fase di ingestione Spark...")
-    
+
     try:
         subprocess.run([
             sys.executable,
@@ -75,7 +70,6 @@ if __name__ == "__main__":
         print(f"ERRORE: ingest_spark.py terminato con codice {e.returncode}")
         sys.exit(e.returncode)
 
-    # Esegui training
     print("Avvio fase di training MLflow...")
     try:
         completed = subprocess.run(
@@ -93,5 +87,5 @@ if __name__ == "__main__":
         print(f"ERRORE: il training è terminato con codice {e.returncode}")
         sys.exit(e.returncode)
 
-    print("Pipeline completata con successo")
+    print("✅ Pipeline completata con successo")
 
