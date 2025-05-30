@@ -7,10 +7,7 @@ from openai import OpenAI, RateLimitError, APIError
 def generate_text(prompt: str, output_file: str, dev_mode: bool = False):
     """
     Genera un report narrativo sui dati del progetto usando OpenAI LLM.
-    - Carica i dati preprocessati (Parquet) in Pandas.
-    - Calcola statistiche chiave.
-    - Invoca l'API OpenAI per generare un'analisi testuale.
-    - Salva l'output su file.
+    Se dev_mode è True (o se viene eseguito su GitHub Actions), non usa le API OpenAI.
     """
     print("📊 Caricamento dati...")
     data_path = os.getenv("PROCESSED_DATA_PATH", "data/processed")
@@ -40,15 +37,17 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False):
     # Prompt per il modello
     full_prompt = summary + f"# 🧠 Prompt Utente\n{prompt}\n"
 
-    # API Key OpenAI
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key and not dev_mode:
-        raise ValueError("❌ Variabile OPENAI_API_KEY non trovata.")
+    # Riconosce se in ambiente GitHub Actions
+    if os.getenv("GITHUB_ACTIONS", "false").lower() == "true":
+        dev_mode = True
 
     # Generazione testo
     if dev_mode:
         text = "[DEV MODE] Report simulato.\n\n" + full_prompt
     else:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("❌ Variabile OPENAI_API_KEY non trovata.")
         client = OpenAI(api_key=api_key)
         try:
             print("🤖 Generazione AI in corso...")
