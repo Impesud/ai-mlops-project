@@ -96,7 +96,7 @@ jobs:
           name: trained-model
           path: mlruns  
 
-      - name: Verifica struttura model
+      - name: Check model structure
         run: ls -R mlruns/
 
       - name: Get latest model path

@@ -198,28 +198,28 @@ pytest test/
 
 ---
 
-## 🔁 CI/CD Pipeline
+### 🔁 **CI/CD Pipeline**
 
-The GitHub Actions pipeline performs:
+The GitHub Actions pipeline executes the following steps:
 
-1. Python environment and dependency setup
-2. Data ingestion + model training
-3. Full MLflow logging
-4. Automated testing with pytest
-5. Trained model artifact upload
-6. Docker image build and push to Docker Hub
-7. Deployment and inference endpoint test using `mlflow models serve`
+- ✅ Set up Python environment and install all dependencies  
+- 🔄 Run full data ingestion and model training workflow  
+- 📊 Track parameters, metrics, models, and artifacts using MLflow  
+- 🧪 Execute unit tests with `pytest`  
+- ☁️ Upload the trained model artifact to GitHub Actions  
+- 🐳 Build and push the Docker image to Docker Hub  
+- 📦 Deploy and test the inference endpoint using `mlflow models serve`
 
 ---
 
-## 🚀 Next Steps
+### 🚀 **Next Steps**
 
-1. Advanced feature engineering (hour, day, user stats)  
-2. Hyperparameter tuning with Optuna  
-3. Containerization + Helm + Docker/K8s deploy  
-4. Dynamic prompts + artifact logging  
-5. CI/CD with SonarQube + environments  
-6. Model serving with `mlflow models serve` or FastAPI
+- 🧠 Advanced feature engineering (hour, weekday, user-level stats)  
+- 🎯 Hyperparameter tuning via Optuna or GridSearchCV  
+- ⚙️ Containerization + Helm charts for Docker/Kubernetes deployment  
+- ✨ Dynamic prompt generation + structured artifact logging  
+- 🔐 Enhanced CI/CD with SonarQube and multi-environment pipelines  
+- 📡 Model serving via `mlflow models serve` or FastAPI + REST API
 
 ---
 
