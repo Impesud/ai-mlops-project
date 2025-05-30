@@ -1,5 +1,15 @@
+mode: prod
+
+dev:
+  path: data/raw-data/sample_1k.csv
+
+prod:
+  path: data/raw-data/sample_100k.csv
+
 format: csv
-path: s3a://my-mlops-raw-data/
+
+# Questi servono per la scrittura e lettura da S3
+s3_path: s3a://my-mlops-raw-data/
 output_path: s3a://my-mlops-processed-data/
 local_output_path: data/processed
 

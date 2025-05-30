@@ -27,6 +27,8 @@ def load_config(path="config.yaml"):
 if __name__ == "__main__":
     # 1) Caricamento config
     cfg = load_config()
+    mode = cfg.get("mode", "dev")
+    input_path = cfg[mode]['input_path']
 
     # 2) Inizializza SparkSession con supporto S3A
     spark = (
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     )
 
     # 3) Lettura dati preprocessati e rimozione null
-    df = spark.read.parquet(cfg['input_path'])
+    df = spark.read.parquet(input_path)
     df = df.filter(col('event_time').isNotNull() & col('value').isNotNull())
 
     # 4) Conversione in Pandas
@@ -79,7 +81,6 @@ if __name__ == "__main__":
         X_res, y_res = X_train, y_train
 
     # 11) Inizializza MLflow e run
-    
     mlflow.set_tracking_uri("file:./mlruns")
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():

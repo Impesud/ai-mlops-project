@@ -22,31 +22,19 @@ os.environ["fs.s3a.connection.timeout"] = os.getenv("FS_S3A_CONNECTION_TIMEOUT",
 
 if __name__ == "__main__":
     config = load_config("config.yaml")
+    mode = config.get("mode", "dev")
+    data_path = config[mode]["path"]
 
-try:
     spark = (
         SparkSession.builder
-        .appName("Batch Ingestion")
-        .config("spark.jars.packages", ",".join([
-            "org.apache.hadoop:hadoop-aws:3.3.6",
-            "com.amazonaws:aws-java-sdk-bundle:1.12.367",
-            "org.wildfly.openssl:wildfly-openssl:1.1.3.Final"
-        ]))
+        .appName("ModelTraining")
+        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-        .config("spark.hadoop.fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
-        .config("spark.hadoop.fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
+        .config("spark.hadoop.fs.s3a.access.key", os.environ['AWS_ACCESS_KEY_ID'])
+        .config("spark.hadoop.fs.s3a.secret.key", os.environ['AWS_SECRET_ACCESS_KEY'])
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
-        # Timeout settings
-        .config("spark.hadoop.fs.s3a.connection.timeout", "60000")
-        .config("spark.hadoop.fs.s3a.connection.establish.timeout", "5000")
-        .config("spark.hadoop.fs.s3a.socket.timeout", "60000")
-        .config("spark.files.fetchTimeout", "60000")  
         .getOrCreate()
     )
-except Exception as e:
-    print("⚠️ Spark configurazione non valida, procedo con default:", e)
-    spark = SparkSession.builder.appName("Batch Ingestion").getOrCreate()
     
     # 2) Batch ingestion
     print("Avvio batch ingestion Spark...")
@@ -57,7 +45,7 @@ except Exception as e:
             .option("inferSchema", "true")
             .option("sep", ",") 
             .schema(schema)
-            .load(config["path"])
+            .load(data_path)
     )
     cleaned = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
