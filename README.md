@@ -6,7 +6,7 @@
 [![MLflow](https://img.shields.io/badge/MLflow-2.6.2-green)](https://mlflow.org/)
 [![LLM](https://img.shields.io/badge/GenerativeAI-OpenAI-blueviolet)](https://openai.com/)
 [![Build](https://github.com/impesud/ai-mlops-project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
-[![License](https://img.shields.io/github/license/impesud/ai-mlops-project)](https://github.com/impesud/ai-mlops-project/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/impesud/ai-mlops-project/blob/main/LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/impesud/ai-mlops-project)](https://github.com/impesud/ai-mlops-project/commits/main)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu-blue)]()
 
@@ -218,6 +218,10 @@ La pipeline GitHub Actions esegue:
 
 ## 📜 Licenza
 
-MIT © 2025 impesud
+MIT © 2025 Erick Jara - Impesud
+
+✍️ Attribution
+If you use this project, please mention:
+"Based on the AI MLOps Project by Erick Jara - Impesud".
 
 
