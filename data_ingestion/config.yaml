@@ -2,16 +2,18 @@ mode: prod
 
 dev:
   path: data/raw-data/sample_1k.csv
+  output_path: s3a://my-mlops-processed-data/dev/
+  local_output_path: data/processed/dev/
 
 prod:
   path: data/raw-data/sample_100k.csv
+  output_path: s3a://my-mlops-processed-data/prod/
+  local_output_path: data/processed/prod/
 
 format: csv
 
-# Questi servono per la scrittura e lettura da S3
 s3_path: s3a://my-mlops-raw-data/
-output_path: s3a://my-mlops-processed-data/
-local_output_path: data/processed
+s3_output_path: s3a://my-mlops-processed-data/
 
 aws:
   access_key_id: ${AWS_ACCESS_KEY_ID}

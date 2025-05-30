@@ -3,6 +3,7 @@
 import os
 import sys
 import subprocess
+from datetime import datetime
 import yaml
 import time
 from pyspark.sql import SparkSession
@@ -27,6 +28,11 @@ def load_config(path="config.yaml"):
 if __name__ == "__main__":
     # 1) Caricamento config
     cfg = load_config()
+    mode = cfg.get("mode", "dev")
+    input_path = cfg[mode]['input_path']
+    
+    print(f"Mode attivo: {mode}")
+    print(f"File di input: {input_path}")
 
     # 2) Inizializza SparkSession con supporto S3A
     spark = (
@@ -41,7 +47,7 @@ if __name__ == "__main__":
     )
 
     # 3) Lettura dati preprocessati e rimozione null
-    df = spark.read.parquet(cfg['input_path'])
+    df = spark.read.parquet(input_path)
     df = df.filter(col('event_time').isNotNull() & col('value').isNotNull())
 
     # 4) Conversione in Pandas
@@ -63,15 +69,15 @@ if __name__ == "__main__":
     # 9) Split train/test stratificato
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
-        test_size=cfg['test_size'],
-        random_state=cfg['random_seed'],
+        test_size=cfg[mode]['test_size'],
+        random_state=cfg[mode]['random_seed'],
         stratify=y
     )
 
     # 10) Resampling SMOTE e class weights
     try:
         from imblearn.over_sampling import SMOTE
-        sm = SMOTE(random_state=cfg['random_seed'])
+        sm = SMOTE(random_state=cfg[mode]['random_seed'])
         X_res, y_res = sm.fit_resample(X_train, y_train)
         print(f"Resampling SMOTE completato: da {len(y_train)} a {len(y_res)} esempi bilanciati")
     except ImportError:
@@ -84,11 +90,11 @@ if __name__ == "__main__":
     mlflow.set_experiment("my-experiment")
     with mlflow.start_run():
         # Log parametri
-        mlflow.log_params(cfg['model_params'])
+        mlflow.log_params(cfg[mode]['model_params'])
 
         # Training
         model = RandomForestClassifier(
-            **cfg['model_params'],
+            **cfg[mode]['model_params'],
             class_weight="balanced"
         )
         model.fit(X_res, y_res)
@@ -132,8 +138,9 @@ if __name__ == "__main__":
             mlflow.sklearn.log_model(model, artifact_path='model')
 
         # Genera report con AI
-        prompt = cfg.get("generative_ai", {}).get("prompt", "Analisi dei dati")
-        output_path = cfg.get("generative_ai", {}).get("output_path", "report.txt")
+        prompt = cfg[mode].get("generative_ai", {}).get("prompt", "Analisi dei dati")
+        today = datetime.today().strftime("%Y-%m-%d")
+        output_path = f"docs/reports/report-{mode}-{today}.txt"
 
         print(f"🧠 Genero report generativo con prompt: \"{prompt}\"")
         try:

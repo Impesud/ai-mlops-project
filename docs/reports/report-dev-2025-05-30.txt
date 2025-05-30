@@ -1,0 +1,48 @@
+# 📝 Report Generativo
+
+# 📈 Dataset Summary
+- Totale eventi: 1000
+- Acquisti: 242
+- Non-acquisti: 758
+- Statistiche valore: {'count': 1000.0, 'mean': 50.18591000000001, 'std': 29.656080176978268, 'min': 0.02, '25%': 22.9875, '50%': 50.705, '75%': 75.88499999999999, 'max': 99.99}
+
+# 🧠 Prompt Utente
+Analisi dei dati (DEV)
+
+## 📋 Output AI
+Ecco un’**analisi sintetica** dei dati che hai fornito:
+
+---
+
+## 1. **Distribuzione Eventi**
+- **Totale eventi:** 1000
+- **Acquisti:** 242 (24,2%)
+- **Non-acquisti:** 758 (75,8%)
+
+### **Interpretazione**
+La maggior parte degli eventi NON corrisponde a un acquisto: solo circa un quarto degli eventi sono conversioni. Questo può indicare un funnel migliorabile o un normale tasso di conversione a seconda del contesto.
+
+---
+
+## 2. **Valore (Probabile valore dell’acquisto o della transazione)**
+**Statistiche principali:**
+| Statistica    | Valore     |
+|---------------|:----------:|
+| **Media**     | 50,19      |
+| **Dev.Standard** | 29,65   |
+| **Minimo**    | 0,02       |
+| **1º Quartile (25%)** | 22,99 |
+| **Mediana (50%)** | 50,71   |
+| **3º Quartile (75%)** | 75,88 |
+| **Massimo**   | 99,99      |
+
+### **Interpretazione**
+- **Distribuzione Ampia:** Il valore degli eventi è distribuito in modo relativamente uniforme su tutto l’intervallo (da 0,02 a ~100).
+- **Tendenza Centrale:** La media e la mediana sono molto vicine (~50), segno di una distribuzione vicina alla simmetria, ma la **deviazione standard elevata** indica molta variabilità tra i valori.
+- **Quartili:** Il 50% centrale dei valori è distribuito tra circa 23 e 76. Questo suggerisce che non ci sono grandi concentrazioni di valori estremamente bassi o alti, ma piuttosto una distribuzione omogenea.
+
+---
+
+## 3. **Spunti e Suggerimenti Operativi**
+- **Conversion Rate (tasso di acquisto):** 24,2% — se il dato rappresenta un funnel di acquisto, è buono rispetto a molte industry, ma la bontà dipende dal contesto.
+- **Segmentazione:** Potresti differenziare ulteriormente l’analisi tra eventi di acquisto e non-acquisto (es. valore medio solo tra chi acquista

@@ -19,6 +19,7 @@ This end-to-end solution features:
 - Testing via `pytest`  
 - CI/CD workflows powered by GitHub Actions  
 - Dockerized deployment pipeline
+- Multi-environment support (dev / prod) with configurable pipeline behavior
 
 ✅ Fully compatible with Ubuntu + GitHub Actions  
 ✅ Cloud extensible (AWS, Azure, GCP)  
@@ -53,9 +54,9 @@ Here is an overview of the AI MLOps Pipeline:
 
 ## 🔍 Model and Training Pipeline
 
-Starting from a synthetic CSV file, the project performs batch ingestion with Apache Spark, followed by feature engineering in Pandas. The preprocessed data is used to train a Random Forest classifier on a binary classification task: purchase vs. non-purchase.
+Starting from synthetic CSV data (sample_1k.csv for dev or sample_100k.csv for prod), the project performs batch ingestion with Apache Spark, followed by feature engineering in Pandas. The preprocessed data is used to train a Random Forest classifier on a binary classification task: purchase vs. non-purchase.
 
-The model predicts, for each event with its features (including value and timestamp), whether it's a purchase (1) or another action (0, e.g., click/view/signup). Results are logged with MLflow, and reports are generated via OpenAI.
+The model predicts whether each event (e.g., click, signup, purchase) is a purchase. Results are logged with MLflow and analyzed through Generative AI reports powered by OpenAI.
 
 ---
 
@@ -108,24 +109,10 @@ The model predicts, for each event with its features (including value and timest
    source ~/.bashrc
    ```
 
-5. **Update `config.yaml`**  
-   Edit `data_ingestion/config.yaml`:
-   ```yaml
-   format: csv
-   path: s3a://my-mlops-raw-data/
-   output_path: s3a://my-mlops-processed-data/
-   local_output_path: data/processed
-   aws:
-     region: eu-central-1
-   test_size: 0.2
-   random_seed: 42
-   model_params:
-     n_estimators: 100
-     max_depth: 5
-   generative_ai:
-     enabled: true
-     prompt: "Data analysis"
-     output_path: "report.txt"
+5. **Switch mode (dev/prod) and run**  
+   Set `dev` or `prod`:
+   ```bash
+   ./scripts/run_pipeline.sh dev
    ```
 
 ---
@@ -148,15 +135,15 @@ The model predicts, for each event with its features (including value and timest
 # Activate virtualenv
 source venv/bin/activate
 
-# Full pipeline
-python scripts/pipeline.py
+# Run entire pipeline in dev/prod mode
+./scripts/run_pipeline.sh dev
 
-# Separate steps
-bash scripts/run_ingest.sh
-bash scripts/run_train.sh
+# Manually run stages
+./scripts/run_ingest.sh
+./scripts/run_train.sh
 
-# Generate AI report
-python generative_ai/generate.py --prompt "Data analysis" --output report.txt
+# Generate LLM report (automatically dated)
+python generative_ai/generate.py --prompt "Data analysis" 
 ```
 
 ---
@@ -183,7 +170,7 @@ View:
 
 Start MLflow Tracking Server:
 ```bash
-bash mlops/entrypoint.sh
+./mlops/entrypoint.sh
 ```
 Access:
 ```bash
@@ -223,12 +210,21 @@ The GitHub Actions pipeline executes the following steps:
 
 ---
 
+### ✅ Already Implemented Highlights
+
+- Dev/Prod mode switching via CLI and `config.yaml`
+- End-to-end pipeline execution with `pipeline.py`
+- MLflow tracking with model signature, metrics, and custom artifacts
+- Docker-based setup for CI/CD and local training
+- Dynamic LLM report generation with OpenAI and fallback handling
+
+---
+
 ### 🚀 **Next Steps**
 
 - 🧠 Advanced feature engineering (hour, weekday, user-level stats)  
-- 🎯 Hyperparameter tuning via Optuna or GridSearchCV  
-- ⚙️ Containerization + Helm charts for Docker/Kubernetes deployment  
-- ✨ Dynamic prompt generation + structured artifact logging  
+- 🎯 Tune model hyperparameters with Optuna/GridSearchCV  
+- 📈 Log ROC, precision-recall curves in MLflow  
 - 🔐 Enhanced CI/CD with SonarQube and multi-environment pipelines  
 - 📡 Model serving via `mlflow models serve` or FastAPI + REST API
 

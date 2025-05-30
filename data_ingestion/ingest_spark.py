@@ -9,7 +9,6 @@ schema = StructType([
     StructField("event_time", TimestampType(), True),
     StructField("action", StringType(), True),
     StructField("value", DoubleType(), True),
-    # … aggiungi gli altri campi
 ])
 
 def load_config(path: str):
@@ -24,6 +23,11 @@ if __name__ == "__main__":
     config = load_config("config.yaml")
     mode = config.get("mode", "dev")
     data_path = config[mode]["path"]
+    output_path = config[mode]["output_path"]
+    local_output_path = config[mode]["local_output_path"]
+     
+    print(f"Mode attivo: {mode}")
+    print(f"File di input: {data_path}")
 
     spark = (
         SparkSession.builder
@@ -50,12 +54,11 @@ if __name__ == "__main__":
     cleaned = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
     # 3) Scrittura batch
-    print(f"Scrivo Parquet in {config['output_path']}")
-    cleaned.write.mode("append").parquet(config['output_path'])
+    print(f"Scrivo Parquet in {output_path}")
+    cleaned.write.mode("overwrite").parquet(output_path)
     # Scrittura anche in locale (local_output_path)
-    local_path = config.get('local_output_path', 'data/processed')
-    print(f"Scrivo anche Parquet localmente in {local_path}")
-    cleaned.write.mode("overwrite").parquet(local_path)
+    print(f"Scrivo anche Parquet localmente in {local_output_path}")
+    cleaned.write.mode("overwrite").parquet(local_output_path)
 
     spark.stop()
     print("Ingestione batch completata")
