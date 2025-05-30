@@ -96,8 +96,8 @@ jobs:
           name: trained-model
           path: mlruns  
 
-      - name: Unzip artifact
-        run: unzip -q -o mlruns/trained-model.zip -d mlruns/
+      - name: Verifica struttura model
+        run: ls -R mlruns/
 
       - name: Get latest model path
         id: model-path

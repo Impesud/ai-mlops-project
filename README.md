@@ -220,7 +220,7 @@ La pipeline GitHub Actions esegue:
 
 MIT © 2025 Erick Jara - Impesud
 
-✍️ Attribution
+✍️ Attribution:
 If you use this project, please mention:
 "Based on the AI MLOps Project by Erick Jara - Impesud".
 
