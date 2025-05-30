@@ -9,15 +9,23 @@ fi
 
 echo "🚀 Switching to $MODE mode..."
 
-# Update the "mode" field in config.yaml
-CONFIG_FILE="data_ingestion/config.yaml"
-TMP_FILE="${CONFIG_FILE}.tmp"
+# Funzione per aggiornare il campo "mode" in un file YAML
+update_mode_field() {
+  local file=$1
+  local tmp="${file}.tmp"
+  if [[ -f "$file" ]]; then
+    sed "s/^mode:.*/mode: $MODE/" "$file" > "$tmp" && mv "$tmp" "$file"
+    echo "✅ Updated mode in $file to '$MODE'"
+  else
+    echo "⚠️ File not found: $file"
+  fi
+}
 
-# Replace the mode: line with the correct one
-sed "s/^mode:.*/mode: $MODE/" "$CONFIG_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$CONFIG_FILE"
+# Aggiorna entrambi i config.yaml
+update_mode_field "data_ingestion/config.yaml"
+update_mode_field "models/config.yaml"
 
-echo "✅ Updated mode in config.yaml to '$MODE'"
-
-# Run the pipeline
+# Avvia la pipeline
 echo "🚀 Launching pipeline..."
 python3 scripts/pipeline.py
+

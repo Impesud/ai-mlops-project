@@ -34,8 +34,9 @@ if __name__ == "__main__":
     # Percorso file dinamico (dev o prod)
     local_csv = cfg[cfg['mode']]['path']
     s3_path = cfg['s3_path']
+    s3_output_path = cfg['s3_output_path'] 
     raw_bucket = s3_path.replace('s3a://', '').rstrip('/')
-    proc_bucket = cfg['output_path'].replace('s3a://','').rstrip('/')
+    proc_bucket = s3_output_path.replace('s3a://','').rstrip('/')
 
     if not os.path.exists(local_csv):
         print(f"ERRORE: file CSV non trovato in {local_csv}")
