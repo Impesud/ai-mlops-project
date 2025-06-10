@@ -1,37 +1,14 @@
+# data_ingestion/ingest_spark.py 
+import argparse
+import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, isnan, when, count
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
-import yaml, os
+from utils.io import load_env_config
+from utils.logging_utils import setup_logger
 
-# 1) Definizione manuale dello schema
-schema = StructType([
-    StructField("user_id", StringType(), True),
-    StructField("event_time", TimestampType(), True),
-    StructField("action", StringType(), True),
-    StructField("value", DoubleType(), True),
-])
-
-def load_config(path: str):
-    base_dir = os.path.dirname(__file__)
-    full_path = os.path.join(base_dir, path)
-    with open(full_path) as f:
-        return yaml.safe_load(f)
-    
-os.environ["fs.s3a.connection.timeout"] = os.getenv("FS_S3A_CONNECTION_TIMEOUT", "60000")
-
-if __name__ == "__main__":
-    config = load_config("config.yaml")
-    mode = config.get("mode", "dev")
-    data_path = config[mode]["path"]
-    output_path = config[mode]["output_path"]
-    local_output_path = config[mode]["local_output_path"]
-     
-    print(f"Mode attivo: {mode}")
-    print(f"File di input: {data_path}")
-
-    spark = (
+def create_spark_session():
+    return (
         SparkSession.builder
-        .appName("ModelTraining")
+        .appName("Batch Ingestion Job")
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ['AWS_ACCESS_KEY_ID'])
@@ -39,28 +16,49 @@ if __name__ == "__main__":
         .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
         .getOrCreate()
     )
-    
-    # 2) Batch ingestion
-    print("Avvio batch ingestion Spark...")
-    df = (
-        spark.read
-            .format(config["format"])
-            .option("header", "true")
-            .option("inferSchema", "true")
-            .option("sep", ",") 
-            .schema(schema)
-            .load(data_path)
-    )
-    cleaned = df.filter(col("event_time").isNotNull() & col("value").isNotNull())
 
-    # 3) Scrittura batch
-    print(f"Scrivo Parquet in {output_path}")
-    cleaned.write.mode("overwrite").parquet(output_path)
-    # Scrittura anche in locale (local_output_path)
-    print(f"Scrivo anche Parquet localmente in {local_output_path}")
-    cleaned.write.mode("overwrite").parquet(local_output_path)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env", type=str, default="dev", help="Environment: dev or prod")
+    args = parser.parse_args()
+    logger = setup_logger("ingest_spark", args.env)
 
-    spark.stop()
-    print("Ingestione batch completata")
+    spark = None
+
+    try:
+        cfg = load_env_config(args.env)
+        data_cfg = cfg.get("data", {})
+
+        if "local_input_path" not in data_cfg:
+            raise ValueError("Missing data config key: local_input_path")
+
+        logger.info(f"🔧 Environment: {args.env}")
+        logger.info(f"📁 Input path: {data_cfg['local_input_path']}")
+
+        spark = create_spark_session()
+        logger.info("✅ Spark session started.")
+
+        df = (
+            spark.read
+                .format(data_cfg.get("format", "csv"))
+                .option("header", "true")
+                .option("inferSchema", "true")
+                .option("sep", ",")
+                .load(data_cfg["local_input_path"])
+        )
+
+        logger.info(f"📊 Ingested {df.count()} rows")
+        df.write.mode("overwrite").parquet(f"data/intermediate/{args.env}")
+        logger.info(f"💾 Saved intermediate data to data/intermediate/{args.env}")
+
+    except Exception as e:
+        logger.exception(f"❌ Ingestion failed: {e}")
+        raise
+
+    finally:
+        if spark is not None:
+            spark.stop()
+            logger.info("🛑 Spark session stopped.")
+
 
 

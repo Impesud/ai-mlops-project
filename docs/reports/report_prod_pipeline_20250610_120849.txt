@@ -1,0 +1,28 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 93474
+- Purchases: 13968
+- Non-purchases: 79506
+- Value statistics: {'count': 93474.0, 'mean': 49.92827763142069, 'std': 14.14466297712422, 'min': 13.25277157214962, '25%': 40.004618833213485, '50%': 49.95619368122002, '75%': 59.86815642012868, 'max': 85.66538773983348}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+# 📊 Data Pipeline Report
+
+The dataset under analysis comprises 93,474 distinct events. These events fall into two categories: Purchases and Non-Purchases.
+
+## Event Breakdown
+Out of the total events, 13,968 (approximately 14.95% of the dataset) are classified as "Purchases". The rest of the events, 79,506 (or approximately 85.05% of the dataset), are classified as "Non-Purchases". 
+
+## Value Statistics
+In terms of the value associated with each event, the dataset presents the following statistical breakdown:
+
+- Mean: 49.93, suggesting that on average, the value of the events (both Purchases and Non-Purchases combined) in the dataset is close to 50.
+- Standard Deviation: 14.14, implying a moderate spread or variability in the value data around the mean.
+- Minimum and Maximum: The minimum value recorded among the events is 13.25, whereas the maximum value goes up to 85.66. This shows the extent of the data points from the lowest to the highest.
+- Quartiles: The first quartile (25%) is at around 40, indicating that 25% of all values fall below 40. The median (or second quartile, 50%) is nearly 50, which means 50% of the values are under 50, and the rest are above. The third quartile (75%) is about 59.87, showing that 75% of all values are less than approximately 60.
+
+This summary of data gives insights into the distribution and characteristics of the events under review. The next analysis step could include further insights by breaking down value statistics for the "Purchases" and "Non-Purchases" categories, finding patterns and correlations, and possibly forecasting future trends.

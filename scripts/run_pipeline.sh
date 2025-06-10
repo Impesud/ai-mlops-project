@@ -1,31 +1,38 @@
 #!/bin/bash
 
+set -e  # Stop execution if any command fails
+
 MODE=$1
+MLFLOW_UI=$2  # Optional: --mlflow-ui
 
 if [[ "$MODE" != "dev" && "$MODE" != "prod" ]]; then
-  echo "❌ Usage: ./run_pipeline.sh [dev|prod]"
+  echo "❌ Usage: ./scripts/run_pipeline.sh [dev|prod] [--mlflow-ui]"
+  echo "Example: ./scripts/run_pipeline.sh dev --mlflow-ui"
   exit 1
 fi
 
-echo "🚀 Switching to $MODE mode..."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 Starting pipeline in '$MODE' mode..."
 
-# Funzione per aggiornare il campo "mode" in un file YAML
-update_mode_field() {
-  local file=$1
-  local tmp="${file}.tmp"
-  if [[ -f "$file" ]]; then
-    sed "s/^mode:.*/mode: $MODE/" "$file" > "$tmp" && mv "$tmp" "$file"
-    echo "✅ Updated mode in $file to '$MODE'"
-  else
-    echo "⚠️ File not found: $file"
-  fi
-}
+# Export mode for subprocesses
+export ENV_MODE="$MODE"
 
-# Aggiorna entrambi i config.yaml
-update_mode_field "data_ingestion/config.yaml"
-update_mode_field "models/config.yaml"
+# Build python command
+CMD=(python3 -m scripts.pipeline --env "$MODE")
 
-# Avvia la pipeline
-echo "🚀 Launching pipeline..."
-python3 scripts/pipeline.py
+if [[ "$MLFLOW_UI" == "--mlflow-ui" ]]; then
+  CMD+=("--mlflow-ui")
+  echo "📡 MLflow UI will be started at the end of training."
+fi
+
+# Run the pipeline with or without --mlflow-ui
+"${CMD[@]}"
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✅ Pipeline completed for '$MODE'."
+
+
+
+
+
+
+
 

@@ -1,0 +1,38 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 93474
+- Purchases: 13968
+- Non-purchases: 79506
+- Value statistics: {'count': 93474.0, 'mean': 49.92827763142069, 'std': 14.14466297712422, 'min': 13.25277157214962, '25%': 40.004618833213485, '50%': 49.95619368122002, '75%': 59.86815642012868, 'max': 85.66538773983348}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+# Data Pipeline Report
+
+## Dataset Overview
+
+Our dataset contains a total of 93,474 events, each event being a record of a user interaction in our application. The events are classified into two types: purchases and non-purchases.
+
+The dataset reflects that quite a few users are actively engaging with our application, but not all of them are making purchases. Indeed, out of the total events, 13,968 are purchases, which means that around 14.94% of all recorded user interactions involve a purchase.
+
+However, the vast majority of events are non-purchases: there are 79,506 such events, which represent 85.06% of all user interactions in the dataset. These could be any form of interaction that doesn't lead directly to a purchase - for instance, browsing items, adding them to a wishlist, or reading reviews.
+
+Such a disparity between purchases and non-purchases is not necessarily negative. Many of the non-purchase events may still contribute positively to the user experience, making users more likely to make a purchase in the future.
+
+## Individual Event Value
+
+A notable aspect of our dataset is the 'value' column, which quantifies the financial value associated with each event. This column has following statistical description:
+
+- Count: 93,474. This confirms that each event in the dataset has an associated value.
+- Mean: 49.93. On average, the events recorded in our dataset each correlate to around $49.93 in value.
+- Standard Deviation: 14.14. The values associated with the events have a moderate degree of variation around the mean.
+- Minimum: 13.25. The least valuable event in our dataset is worth $13.25.
+- 25 percentile (Q1): 40.00. 25% of the events are associated with a value of $40.00 or less.
+- Median (50 percentile / Q2): 49.96. Half of the events in our dataset are associated with a value of less than $49.96, and half are associated with a value greater than this. Being very close to the mean, this suggests a near symmetric distribution of values.
+- 75 percentile (Q3): 59.87. 75% of the events are associated with a value of $59.87 or less.
+- Maximum: 85.67. The most valuable event in our dataset is worth $85.67.
+
+In depth data analysis can

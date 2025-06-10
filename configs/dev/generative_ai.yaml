@@ -1,0 +1,3 @@
+enabled: true
+prompt: "Data Analysis (DEV)"
+output_path: "report-dev.txt"

@@ -8,3 +8,5 @@ boto3
 imbalanced-learn
 openai
 pytest
+cerberus
+seaborn>=0.12
