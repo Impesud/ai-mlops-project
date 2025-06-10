@@ -1,92 +1,123 @@
-# scripts/pipeline.py
 import os
 import sys
 import subprocess
 import boto3
-import yaml
+import argparse
+from utils.io import load_env_config
+from utils.logging_utils import setup_logger
+from datetime import datetime
 
-def load_config(path="data_ingestion/config.yaml"):
-    scripts_dir = os.path.dirname(__file__)
-    project_root = os.path.dirname(scripts_dir)
-    config_path = os.path.join(project_root, path)
-    if not os.path.exists(config_path):
-        print(f"ERRORE: config file non trovato in {config_path}")
-        sys.exit(1)
-    with open(config_path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
-
-def ensure_bucket(s3_client, bucket_name, region):
+def ensure_bucket(s3_client, bucket_name, region, logger):
     try:
         s3_client.head_bucket(Bucket=bucket_name)
-        print(f"Bucket '{bucket_name}' già esistente")
+        logger.info(f"Bucket '{bucket_name}' already exists.")
     except s3_client.exceptions.NoSuchBucket:
-        print(f"Creo bucket '{bucket_name}' in regione {region}")
+        logger.info(f"Creating bucket '{bucket_name}' in region '{region}'.")
         s3_client.create_bucket(
             Bucket=bucket_name,
             CreateBucketConfiguration={"LocationConstraint": region}
         )
 
 if __name__ == "__main__":
-    cfg = load_config()
-    mode = cfg.get("mode", "dev")
-    region = cfg['aws']['region']
-    
-    # Percorso file dinamico (dev o prod)
-    local_csv = cfg[cfg['mode']]['path']
-    s3_path = cfg['s3_path']
-    s3_output_path = cfg['s3_output_path'] 
-    raw_bucket = s3_path.replace('s3a://', '').rstrip('/')
-    proc_bucket = s3_output_path.replace('s3a://','').rstrip('/')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env", type=str, default="dev", help="Environment: dev or prod")
+    parser.add_argument("--mlflow-ui", action="store_true", help="Start MLflow UI after training")
+    args = parser.parse_args()
 
-    if not os.path.exists(local_csv):
-        print(f"ERRORE: file CSV non trovato in {local_csv}")
+    logger = setup_logger("pipeline", args.env)
+
+    # Load configuration
+    cfg = load_env_config(args.env)
+    data_cfg = cfg["data"]
+    aws_cfg = cfg["aws"]
+    cloud_cfg = cfg["cloud"]
+
+    region = aws_cfg["region"]
+    access_key = aws_cfg["access_key_id"]
+    secret_key = aws_cfg["secret_access_key"]
+
+    # Set AWS credentials in environment
+    os.environ["AWS_ACCESS_KEY_ID"] = access_key
+    os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+    os.environ["AWS_REGION"] = region
+
+    input_csv = data_cfg["local_input_path"]
+    raw_bucket = cloud_cfg["s3_bucket_input"].replace("s3a://", "").rstrip("/")
+    proc_bucket = cloud_cfg["s3_bucket_output"].replace("s3a://", "").rstrip("/")
+
+    # Check if local input exists
+    if not os.path.exists(input_csv):
+        logger.error(f"CSV input not found at: {input_csv}")
         sys.exit(1)
     else:
-        print(f"Trovato file di input: {local_csv}")
+        logger.info(f"Found input CSV: {input_csv}")
 
-    session = boto3.Session(profile_name=os.environ.get('AWS_PROFILE'), region_name=region)
-    s3 = session.client('s3')
+    # Initialize boto3 session
+    session = boto3.Session(profile_name=os.environ.get("AWS_PROFILE"), region_name=region)
+    s3 = session.client("s3")
 
-    ensure_bucket(s3, raw_bucket, region)
-    ensure_bucket(s3, proc_bucket, region)
+    # Ensure buckets exist
+    ensure_bucket(s3, raw_bucket, region, logger)
+    ensure_bucket(s3, proc_bucket, region, logger)
 
-    print(f"Sincronizzo data/raw-data/ su s3://{raw_bucket}/")
-    subprocess.run([
-        "aws", "s3", "sync",
-        os.path.join('data', 'raw-data') + os.sep,
-        f"s3://{raw_bucket}/"
-    ], check=True)
+    # Start ingestion
+    env_vars = os.environ.copy()
+    env_vars["PYSPARK_PYTHON"] = sys.executable
+    env_vars["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
-    env = os.environ.copy()
-    env['PYSPARK_PYTHON'] = sys.executable
-    env['PYSPARK_DRIVER_PYTHON'] = sys.executable
-    print("Avvio fase di ingestione Spark...")
-
+    logger.info("🚚 Starting Spark ingestion job...")
     try:
         subprocess.run([
-            sys.executable,
-            "data_ingestion/ingest_spark.py"
-        ], check=True, env=env)
+            sys.executable, "-m", "data_ingestion.ingest_spark", "--env", args.env
+        ], check=True, env=env_vars)
     except subprocess.CalledProcessError as e:
-        print(f"ERRORE: ingest_spark.py terminato con codice {e.returncode}")
+        logger.error(f"❌ Spark ingestion failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
-    print("Avvio fase di training MLflow...")
+    logger.info("🧹 Starting data processing job...")
     try:
-        completed = subprocess.run(
-            [sys.executable, "models/train.py"],
-            check=True,
-            env=env,
-            text=True
-        )
-        print(completed.stdout)
+        subprocess.run([
+            sys.executable, "-m", "data_processing.process", "--env", args.env
+        ], check=True, env=env_vars)
     except subprocess.CalledProcessError as e:
-        print("===== TRAINING STDOUT =====")
-        print(e.stdout)
-        print("===== TRAINING STDERR =====")
-        print(e.stderr)
-        print(f"ERRORE: il training è terminato con codice {e.returncode}")
+        logger.error(f"❌ Data processing failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
-    print("✅ Pipeline completata con successo")
+    logger.info("🧠 Starting model training job...")
+    try:
+        command = [sys.executable, "-m", "models.train", "--env", args.env]
+        if args.mlflow_ui:
+            command.append("--mlflow-ui")
+        subprocess.run(command, check=True, env=env_vars)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Training failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
+
+    logger.info("🧾 Generating AI report...")
+    try:
+        prompt = os.environ.get("AI_PROMPT", "Data pipeline report")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        report_file = f"docs/reports/report_{args.env}_pipeline_{timestamp}.txt"
+        subprocess.run([
+            sys.executable, "-m", "generative_ai.generate", "--env", args.env, "--prompt", prompt, "--output", report_file
+        ], check=True, env=env_vars)
+        logger.info(f"✅ Report saved to {report_file}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Report generation failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
+
+    logger.info("☁️ Syncing local folders to S3...")
+    try:
+        subprocess.run(["bash", "scripts/sync_s3.sh", args.env], check=True, env=env_vars)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ S3 sync failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
+
+    logger.info("🎉 Pipeline completed successfully.")
+
+
+
+
+
+
 

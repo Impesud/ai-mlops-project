@@ -1,0 +1,23 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 94954
+- Purchases: 14181
+- Non-purchases: 80773
+- Value statistics: {'count': 94954.0, 'mean': 50.01755693461218, 'std': 14.939440378798492, 'min': 0.19568126956772147, '25%': 39.85991259812451, '50%': 49.99019169346664, '75%': 60.09007486139578, 'max': 118.76527786925202}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+Based on the data provided, the dataset contains a total of 94,954 events. These events are categorized into two types: Purchases and Non-Purchases. Out of the total events, 14,181 were Purchases and 80,773 were Non-Purchases. 
+
+In terms of the value statistics, the data is as follows:
+- The total count of values is 94,954
+- The average (mean) value is approximately 50.02
+- The standard deviation, which measures the dispersion of a dataset relative to its mean, is around 14.94. This suggests a moderately dispersed dataset.
+- The minimum value is around 0.20
+- We also have the quartile values which help in understanding the distribution of data. Around 25% of data values are less than or equal to 39.86, 50% of values (also known as the median) are less than or equal to 49.99, and around 75% of data values are less than or equal to 60.09.
+- The maximum value in the dataset is around 118.77.
+
+This summary provides a comprehensive snapshot of the data at hand. As a data analyst, I can use this information to further explore patterns, trends, or anomalies that might be evident in the dataset.

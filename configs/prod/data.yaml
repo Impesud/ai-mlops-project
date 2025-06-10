@@ -1,0 +1,4 @@
+local_input_path: "data/raw-data/prod/"
+local_intermediate_path: "data/intermediate/prod/"
+local_processed_path: "data/processed/prod/"
+format: "csv"

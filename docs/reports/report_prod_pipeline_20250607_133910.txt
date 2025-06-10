@@ -1,0 +1,31 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 94954
+- Purchases: 14181
+- Non-purchases: 80773
+- Value statistics: {'count': 94954.0, 'mean': 50.01755693461218, 'std': 14.939440378798492, 'min': 0.19568126956772147, '25%': 39.85991259812451, '50%': 49.99019169346664, '75%': 60.09007486139578, 'max': 118.76527786925202}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+## Data Pipeline Report
+
+The dataset we're working with contains a total of 94,954 events. These events are categorized into 'purchases' and 'non-purchases'. 
+
+Out of these total events, 14,181 fall under the 'purchases' category which indicates the successful purchase transactions that have been made. This constitutes approximately 14.93% of the total events in the dataset.
+
+On the other hand, a larger proportion of the events specifically 80,773 events are categorized under 'non-purchases'. These could be instances where a user adds items to the cart or browses through products without completing the purchase. This comprises about 85.07% of the total events.
+
+Looking into the value statistics of the events, we find that the values of these events have a mean or average standing at 50.02. This mean value is an indicator of the average worth of purchases and non-purchase actions within the dataset.
+
+The standard deviation from the mean is 14.94, this reveals that the values of the events vary from the mean by approximately 14.94 units.
+
+The minimum value registered in the event's dataset stands out as strikingly low at approximately 0.20 units, which is an outlier when compared to the average value. On the other end of the spectrum, the maximum value reaches up to 118.77 units.
+
+Furthermore, the 25th, 50th (also the median), and 75th percentiles of the event values are 39.86 units, 49.99 units, and 60.09 units respectively. This information provides us with the distribution of the event values throughout the dataset.
+
+Therefore, the given dataset offers a comprehensive view of user purchase patterns. This analysis could be used to drive strategies to boost sales, improve user engagement, and maximize business profitability. The insights garnered could help teams understand the value and volume of purchases versus non-purchases, and thus plan adequate growth strategies. They could also explore ways to increase the average value of each event. 
+
+Further analysis could delve into potential correlations between the value of transactions, tendency to complete purchases, and strategic business metrics such as customer lifetime value.

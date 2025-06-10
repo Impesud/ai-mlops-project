@@ -8,6 +8,7 @@ __pycache__/
 # Evita l'intero contenuto della cartella mlruns, ma mantieni .gitkeep
 mlruns/*
 !mlruns/.gitkeep
+logs/*
 
 # Evita cartelle virtualenv
 .venv/
