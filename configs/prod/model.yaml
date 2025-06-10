@@ -1,0 +1,18 @@
+input_path: "s3a://my-mlops-processed-data/prod/"
+test_size: 0.2
+random_seed: 42
+features:
+  - value
+  - hour
+  - day_of_week
+  - month
+model_params:
+  n_estimators: 40
+  max_depth: 10
+  stepSize: 0.05
+grid:
+  maxIter: [40, 60]
+  maxDepth: [5, 10]
+  stepSize: [0.05, 0.1]
+numFolds: 2
+parallelism: 2

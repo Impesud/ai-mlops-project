@@ -1,0 +1,3 @@
+enabled: true
+prompt: "Detailed data analysis (PROD)"
+output_path: "report-prod.txt"

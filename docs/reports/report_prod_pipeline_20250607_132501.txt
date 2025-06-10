@@ -1,0 +1,23 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 94954
+- Purchases: 14181
+- Non-purchases: 80773
+- Value statistics: {'count': 94954.0, 'mean': 50.01755693461218, 'std': 14.939440378798492, 'min': 0.19568126956772147, '25%': 39.85991259812451, '50%': 49.99019169346664, '75%': 60.09007486139578, 'max': 118.76527786925202}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+# Data Pipeline Report
+
+The dataset contained a total of 94,954 events, with purchase events amounting to 14,181 and non-purchase events constituting 80,773. This showed that purchases make up approximately 15% of the total events.
+
+Looking closer at the value statistics of these events, the count indicated that all 94,954 events had corresponding values. The average value across all events was approximately 50, suggesting that most events were centered around this value.
+
+However, the standard deviation of almost 15 shows a high variation in the dataset, indicating that the values are spread out over a wide range. The minimum value of the dataset was roughly 0.2, and the maximum value reached approximately 119. This illustrates a significant range in the event values.
+
+Furthermore, the 25th, 50th (median), and 75th percentiles were calculated to provide a more nuanced understanding of the distribution of these values. The 25th percentile was near 40, the median, holding the middle ground, was approximately 50, and the 75th percentile was around 60. Despite the greater variability indicated by the standard deviation, these percentiles tell us that 50% of the values fall between 40 and 60. 
+
+In conclusion, analyzing this dataset revealed a large number of events are non-purchases, with a wide range of event values, but observe a concentration between 40 and 60. Further analysis could focus on identifying patterns or correlations linked to high-value events or investigate why the majority of events are non-purchases.

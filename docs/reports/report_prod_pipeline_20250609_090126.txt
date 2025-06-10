@@ -1,0 +1,31 @@
+# 📝 Generative Report
+
+# 📈 Dataset Summary
+- Total events: 94954
+- Purchases: 14181
+- Non-purchases: 80773
+- Value statistics: {'count': 94954.0, 'mean': 50.01755693461218, 'std': 14.939440378798492, 'min': 0.19568126956772147, '25%': 39.85991259812451, '50%': 49.99019169346664, '75%': 60.09007486139578, 'max': 118.76527786925202}
+
+# 🧠 User Prompt
+Data pipeline report
+
+## 📋 AI Output
+# 📊 Data Pipeline Report
+
+## Overview:
+
+Our dataset contains a total of 94,954 events, split into two categories: 'Purchases' and 'Non-Purchases'. There are 14,181 records labeled as 'Purchases', making up 14.93% of the total dataset. Conversely, the dataset contains 80,773 events marked as 'Non-Purchases', accounting for the remaining 85.07%.
+
+## Value Statistics:
+
+The values in the dataset follow a fairly normal distribution. The average value across the dataset stands at approximately 50.02. The standard deviation from this mean is about 14.94, indicating a relatively moderate spread from the mean.
+
+The minimum value recorded in the dataset is 0.19, which might be unusual and could potentially be an outlier or result of data entry error. On the other side of the spectrum, the maximum value escalates to around 118.76. 
+
+In terms of quartiles, the first quartile (25th percentile) falls at roughly 39.86, with the median (50th percentile) at nearly 49.99. The third quartile (75th percentile), marking the point below which 75% of the data falls, is at the approximate value of 60.09.
+
+## Conclusions:
+
+Overall, the dataset shows a greater number of non-purchase events. This could provide valuable insight for the team looking at user engagement or trying to optimize purchase funnels. The spread of value data also offers opportunities for further investigation into user behavior or pricing strategies. 
+
+Please feel free to highlight if there is any specific part of the data that you are interested in for further detailed analysis.

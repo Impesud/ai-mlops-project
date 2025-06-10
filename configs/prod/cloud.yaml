@@ -1,0 +1,3 @@
+s3_bucket_input: "s3a://my-mlops-raw-data/"
+s3_bucket_intermediate: "s3a://my-mlops-intermediate-data/"
+s3_bucket_output: "s3a://my-mlops-processed-data/"
