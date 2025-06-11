@@ -34,11 +34,13 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Prepara directory per MLflow
+      - name: Prepare MLflow directory
         run: mkdir -p mlruns
 
-      - name: Set environment variable for MLflow
-        run: echo "MLFLOW_TRACKING_URI=file:./mlruns" >> $GITHUB_ENV
+      - name: Set environment variables
+        run: |
+          echo "MLFLOW_TRACKING_URI=file:./mlruns" >> $GITHUB_ENV
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
 
       - name: Run pipeline (data ingest + training)
         env:
@@ -46,14 +48,17 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: eu-central-1
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PYTHONPATH: ${{ env.PYTHONPATH }}
         run: |
           source venv/bin/activate
           python scripts/pipeline.py
-      
-      - name: List artifacts
+
+      - name: List MLflow artifacts
         run: find mlruns
 
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ env.PYTHONPATH }}
         run: |
           source venv/bin/activate
           pytest tests/
@@ -119,4 +124,3 @@ jobs:
 
       - name: Deployment complete
         run: echo "✅ Model deployed and tested successfully"
-
