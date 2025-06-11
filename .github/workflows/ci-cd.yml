@@ -69,6 +69,7 @@ jobs:
           name: trained-model
           path: |
             mlruns/**/models/*/artifacts
+            mlruns/*/*/artifacts/model
 
       - name: Build Docker image
         run: |
