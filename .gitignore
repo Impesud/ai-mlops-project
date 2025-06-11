@@ -9,6 +9,8 @@ __pycache__/
 mlruns/*
 !mlruns/.gitkeep
 logs/*
+docs/*
+**/ci-cd.yml
 
 # Evita cartelle virtualenv
 .venv/
