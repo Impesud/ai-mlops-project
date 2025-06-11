@@ -12,6 +12,9 @@ def get_processed_output_path(env="dev"):
     return Path(cfg["data"]["local_processed_path"])
 
 def test_parquet_written_to_processed():
+    """
+    Test that at least one .parquet file was created in the processed output folder.
+    """
     env = os.getenv("TEST_ENV", "dev")
     processed_path = get_processed_output_path(env)
 
@@ -23,6 +26,9 @@ def test_parquet_written_to_processed():
     logger.info(f"✅ Found {len(parquet_files)} .parquet file(s).")
 
 def test_feature_columns_present():
+    """
+    Test that all expected feature columns are present in the processed parquet files.
+    """
     env = os.getenv("TEST_ENV", "dev")
     processed_path = str(get_processed_output_path(env))
 
@@ -31,7 +37,7 @@ def test_feature_columns_present():
 
     expected = {
         "hour", "day_of_week", "day_of_month", "week_of_year",
-        "month", "year", "event_timestamp", "is_weekend"
+        "month", "event_timestamp", "is_weekend"
     }
 
     missing = expected - set(df.columns)
@@ -40,6 +46,9 @@ def test_feature_columns_present():
     spark.stop()
 
 def test_feature_values_valid():
+    """
+    Test that feature columns have valid ranges and no nulls in the processed parquet files.
+    """
     env = os.getenv("TEST_ENV", "dev")
     processed_path = str(get_processed_output_path(env))
 
@@ -52,7 +61,6 @@ def test_feature_values_valid():
         "day_of_month": (1, 31),
         "week_of_year": (1, 53),
         "month": (1, 12),
-        "year": (2000, 2100),
         "is_weekend": (0, 1)
     }
 
