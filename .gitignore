@@ -1,15 +1,28 @@
-
+# Python
 __pycache__/
 *.pyc
+
+# Logs, environments
 *.log
 *.env
 *.DS_Store
 
+# MLflow
 mlruns/*
 !mlruns/.gitkeep
-logs/*
-docs/*
-data/*
 
+#Data
+data/intermediate/*
+data/processed/*
+!data/intermediate/.gitkeep
+!data/processed/.gitkeep
+
+# Logs
+logs/*
+
+# Documentation
+docs/*
+
+# Virtual environments
 .venv/
 env/
