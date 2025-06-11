@@ -70,7 +70,7 @@ jobs:
           path: |
             mlruns/**/models/*/artifacts
             mlruns/*/*/artifacts/model
-
+            
       - name: Build Docker image
         run: |
           docker build -f mlops/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest .
