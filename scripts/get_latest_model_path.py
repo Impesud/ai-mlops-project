@@ -2,16 +2,20 @@ import os
 import glob
 
 def find_latest_model_artifact():
-    # Trova tutte le directory "model" dentro mlruns
+    # Find all "model" directories in mlruns (standard MLflow run artifact)
     matches = glob.glob("mlruns/*/*/artifacts/model", recursive=True)
 
+    # If not found, look for Model Registry artifacts
     if not matches:
-        raise FileNotFoundError("No MLflow model directory found in mlruns/*/*/artifacts/model")
+        matches = glob.glob("mlruns/*/models/*/artifacts", recursive=True)
 
-    # Ordina per ultima modifica
+    if not matches:
+        raise FileNotFoundError("No MLflow model directory found in mlruns/*/*/artifacts/model or mlruns/*/models/*/artifacts")
+
+    # Sort by last modification time
     latest_model_dir = max(matches, key=os.path.getmtime)
 
-    # Stampa solo il path assoluto, senza testo extra
+    # Print only the absolute path, no extra text
     print(os.path.abspath(latest_model_dir))
 
 if __name__ == "__main__":
