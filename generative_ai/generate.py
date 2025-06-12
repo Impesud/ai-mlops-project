@@ -104,6 +104,7 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False, mode: s
         output_file = f"docs/reports/report_{mode}_pipeline_{timestamp}.txt"
 
     try:
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(f"# 📝 Generative Report\n\n{full_prompt}\n## 📋 AI Output\n{text}\n")
         logger.info(f"📁 Report saved to: {output_file}")
