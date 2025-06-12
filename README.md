@@ -269,15 +269,21 @@ pytest tests/
 - 🛰️ Model serving via FastAPI or `mlflow models serve`
 - 📊 Automated LLM-based data and model reporting
 
+
 ---
 
-## License
+[![Contribute](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/Impesud/ai-mlops-project/blob/main/CONTRIBUTING.md)
 
-MIT © 2025 Erick Jara - Impesud
+---
 
-✍️ Attribution:  
-If you use this project, please mention  
-"Based on the AI MLOps Project by Erick Jara - Impesud".
+
+## Contact
+
+Created by Erick Jara – CTO & Senior AI/Data Engineer.
+GitHub: [Impesud](https://github.com/Impesud) | Email: erick.jara@hotmail.it
+
+
+
 
 
 
