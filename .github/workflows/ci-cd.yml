@@ -51,6 +51,7 @@ jobs:
           PYTHONPATH: ${{ env.PYTHONPATH }}
         run: |
           source venv/bin/activate
+          chmod +x scripts/*.sh
           make train-dev
 
       - name: List MLflow artifacts
