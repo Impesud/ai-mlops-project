@@ -2,5 +2,17 @@ input_path: "s3a://my-mlops-processed-data/dev/"
 test_size: 0.2
 random_seed: 42
 model_params:
-  n_estimators: 100
-  max_depth: 10
+    max_depth: 10
+    n_estimators: 100
+    min_samples_leaf: 1
+    max_features: sqrt
+    class_weight: balanced
+do_hyper_search: true
+cv_folds: 5
+param_grid:
+    rf__max_depth: [5, 8, 12]
+    rf__n_estimators: [100, 200, 500]
+    rf__min_samples_leaf: [1, 5, 10]
+    rf__max_features: [sqrt, 0.5]
+    rf__class_weight: [balanced, balanced_subsample]
+do_hyper_search: true
