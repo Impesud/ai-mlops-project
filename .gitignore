@@ -1,17 +1,15 @@
-# Evita di committare file temporanei e ambienti
+
 __pycache__/
 *.pyc
 *.log
 *.env
 *.DS_Store
 
-# Evita l'intero contenuto della cartella mlruns, ma mantieni .gitkeep
 mlruns/*
 !mlruns/.gitkeep
 logs/*
 docs/*
-**/ci-cd.yml
+data/*
 
-# Evita cartelle virtualenv
 .venv/
 env/
