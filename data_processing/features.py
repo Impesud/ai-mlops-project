@@ -1,14 +1,14 @@
-# data_processing/features.py
-
 from pyspark.sql.functions import (
-    col, hour, dayofweek, dayofmonth, weekofyear,
-    month, year, unix_timestamp, when, trim, lower as spark_lower, current_timestamp
+    col, hour, dayofweek, dayofmonth, weekofyear, month,
+    unix_timestamp, when, trim, lower as spark_lower, current_timestamp,
+    count, sum as spark_sum, max as spark_max, to_date
 )
 from pyspark.sql.types import StringType, TimestampType, DoubleType, DataType
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Window
 from typing import Dict
 import logging
 
+# Required columns with their expected types
 REQUIRED_COLUMNS: Dict[str, DataType] = {
     "user_id": StringType(),
     "event_time": TimestampType(),
@@ -18,58 +18,28 @@ REQUIRED_COLUMNS: Dict[str, DataType] = {
 
 logger = logging.getLogger("features")
 
-
 def validate_schema(df: DataFrame) -> DataFrame:
-    """
-    Ensures the DataFrame has all required columns with correct types.
-    If a column has a mismatched type, it will be cast to the expected type.
-    """
     logger.info("🔍 Validating and casting schema if needed...")
     for col_name, expected_type in REQUIRED_COLUMNS.items():
         if col_name not in df.columns:
             logger.error(f"❌ Missing required column: {col_name}")
             raise ValueError(f"Missing required column: {col_name}")
-
         actual_type = df.schema[col_name].dataType
         if type(actual_type) != type(expected_type):
-            logger.warning(
-                f"⚠️ Column '{col_name}' has type {actual_type}, casting to {expected_type}"
-            )
+            logger.warning(f"⚠️ Column '{col_name}' has type {actual_type}, casting to {expected_type}")
             df = df.withColumn(col_name, col(col_name).cast(expected_type))
-
     logger.info("✅ Schema validated and casted where needed.")
     return df
 
-
 def basic_cleaning(df: DataFrame, handle_outliers: bool = False) -> DataFrame:
-    """
-    Basic data cleaning with:
-    - Schema validation
-    - Null handling (with fallback)
-    - String trimming
-    - Optional outlier filtering
-    - Duplicate & future filtering
-    """
     logger.info("🧹 Performing basic cleaning...")
     df = validate_schema(df)
-
-    # 1. Drop rows with missing key fields
     df = df.dropna(subset=["user_id", "event_time", "action", "value"])
-
-    # 2. Standardize string fields
     df = df.withColumn("user_id", trim(spark_lower(col("user_id"))))
     df = df.withColumn("action", trim(spark_lower(col("action"))))
-
-    # 3. Fill missing values with fallback defaults
-    df = df.fillna({
-        "value": 0.0,
-        "action": "unknown"
-    })
-
-    # 4. Remove negative values
+    df = df.fillna({"value": 0.0, "action": "unknown"})
     df = df.filter(col("value") >= 0)
 
-    # 5. Optionally handle outliers with IQR method
     if handle_outliers:
         q1 = df.approxQuantile("value", [0.25], 0.05)[0]
         q3 = df.approxQuantile("value", [0.75], 0.05)[0]
@@ -79,31 +49,44 @@ def basic_cleaning(df: DataFrame, handle_outliers: bool = False) -> DataFrame:
         logger.info(f"📊 Outlier thresholds: lower={lower_bound:.2f}, upper={upper_bound:.2f}")
         df = df.filter((col("value") >= lower_bound) & (col("value") <= upper_bound))
 
-    # 6. Remove duplicates
     df = df.dropDuplicates(["user_id", "event_time", "action"])
-
-    # 7. Remove future timestamps
     df = df.filter(col("event_time") <= current_timestamp())
-
     logger.info("✅ Basic cleaning completed.")
     return df
 
-
 def advanced_feature_engineering(df: DataFrame) -> DataFrame:
-    """
-    Extracts time-based features and additional metadata.
-    """
     logger.info("🧠 Starting advanced feature engineering...")
+
+    # Temporal features
     df = df.withColumn("hour", hour(col("event_time")))
     df = df.withColumn("day_of_week", dayofweek(col("event_time")))
     df = df.withColumn("day_of_month", dayofmonth(col("event_time")))
     df = df.withColumn("week_of_year", weekofyear(col("event_time")))
     df = df.withColumn("month", month(col("event_time")))
-    #df = df.withColumn("year", year(col("event_time")))
     df = df.withColumn("event_timestamp", unix_timestamp(col("event_time")))
     df = df.withColumn("is_weekend", when(col("day_of_week").isin([1, 7]), 1).otherwise(0))
-    logger.info("✅ Advanced feature engineering completed.")
 
+    # Behavioral features (user-level aggregation)
+    user_window = Window.partitionBy("user_id")
+
+    df = df.withColumn("total_value", spark_sum("value").over(user_window))
+    df = df.withColumn("total_events", count("event_time").over(user_window))
+    df = df.withColumn("purchase_events", count(when(col("action") == "purchase", 1)).over(user_window))
+    df = df.withColumn("add_to_cart_events", count(when(col("action") == "add_to_cart", 1)).over(user_window))
+    df = df.withColumn("purchase_ratio", col("purchase_events") / col("total_events"))
+    df = df.withColumn("add_to_cart_ratio", col("add_to_cart_events") / col("total_events"))
+
+    # Active days and average events per day
+    active_days_df = df.select("user_id", to_date("event_time").alias("event_date")).distinct()
+    active_days_count = active_days_df.groupBy("user_id").count().withColumnRenamed("count", "active_days")
+    df = df.join(active_days_count, on="user_id", how="left")
+    df = df.withColumn("avg_events_per_day", col("total_events") / col("active_days"))
+
+    # Recency: days since last event
+    df = df.withColumn("max_event_time", spark_max("event_time").over(user_window))
+    df = df.withColumn("recency_days", (unix_timestamp(current_timestamp()) - unix_timestamp(col("max_event_time"))) / 86400)
+
+    logger.info("✅ Advanced feature engineering completed.")
     return df
 
 
