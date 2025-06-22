@@ -27,29 +27,34 @@ model_schema = {
     "input_path": {"type": "string", "required": True, "empty": False},
     "test_size": {"type": "float", "required": True, "min": 0, "max": 1},
     "random_seed": {"type": "integer", "required": True},
-    "features": {
-        "type": "list",
-        "required": False,
-        "schema": {"type": "string"}
-    },
+    "features": {"type": "list", "required": False, "schema": {"type": "string"}},
+
+    # Default model parameters for RandomForestClassifier
     "model_params": {
         "type": "dict",
         "required": True,
         "schema": {
             "n_estimators": {"type": "integer", "required": True, "min": 1},
             "max_depth": {"type": "integer", "required": True, "min": 1},
-            "stepSize": {"type": "float", "required": False, "min": 0, "max": 1}
+            "min_samples_leaf": {"type": "integer", "required": False, "min": 1},
+            "max_features": {"type": ["string", "float"], "required": False},
+            "class_weight": {"type": "string", "required": False, "allowed": ["balanced", "balanced_subsample"]}
         }
     },
-    "grid": {
+    # Flag to enable hyperparameter search
+    "do_hyper_search": {"type": "boolean", "required": False},
+    # Number of folds for cross-validation
+    "cv_folds": {"type": "integer", "required": False, "min": 2},
+    # Grid for hyperparameter search
+    "param_grid": {
         "type": "dict",
         "required": False,
-        "schema": {
-            "maxIter": {"type": "list", "schema": {"type": "integer"}},
-            "maxDepth": {"type": "list", "schema": {"type": "integer"}},
-            "stepSize": {"type": "list", "schema": {"type": "float"}}
+        "keysrules": {"type": "string"},
+        "valuesrules": {
+            "type": "list",
+            "schema": {"type": ["integer", "float", "string"]}
         }
     },
-    "numFolds": {"type": "integer", "required": False, "min": 2},
+    # Parallelism for grid search
     "parallelism": {"type": "integer", "required": False, "min": 1}
 }
