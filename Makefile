@@ -73,7 +73,7 @@ full-dev-local:
 full-prod-local:
 	./scripts/run_pipeline.sh prod
 
-ml-flow-local:
+mlflow-local:
 	mlflow ui --backend-store-uri ./mlruns --port 5000
 
 # ----------------------------------------------------------
