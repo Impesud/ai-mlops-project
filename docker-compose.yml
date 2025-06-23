@@ -1,0 +1,33 @@
+services:
+
+  mlops:
+    build: .
+    container_name: ai-mlops-platform
+    environment:
+      - MLFLOW_TRACKING_URI=file:/app/mlruns
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "5000:5000"
+      - "1234:1234"
+    command: bash
+
+  mlflow:
+    image: python:3.11-slim
+    container_name: mlflow-ui
+    working_dir: /app
+    volumes:
+      - ./mlruns:/app/mlruns
+    command: >
+      bash -c "
+        pip install mlflow &&
+        mlflow ui --backend-store-uri ./mlruns --host 0.0.0.0 --port 5000
+      "
+    ports:
+      - "5001:5000"
