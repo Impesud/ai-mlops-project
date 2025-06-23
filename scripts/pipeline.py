@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # Set AWS credentials in environment
     os.environ["AWS_ACCESS_KEY_ID"] = access_key
     os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
-    os.environ["AWS_REGION"] = region
+    os.environ["AWS_DEFAULT_REGION"] = region
 
     input_csv = data_cfg["local_input_path"]
     raw_bucket = cloud_cfg["s3_bucket_input"].replace("s3a://", "").rstrip("/")
@@ -104,13 +104,6 @@ if __name__ == "__main__":
         logger.info(f"✅ Report saved to {report_file}")
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Report generation failed with exit code {e.returncode}")
-        sys.exit(e.returncode)
-
-    logger.info("☁️ Syncing local folders to S3...")
-    try:
-        subprocess.run(["bash", "scripts/sync_s3.sh", args.env], check=True, env=env_vars)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"❌ S3 sync failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
     logger.info("🎉 Pipeline completed successfully.")

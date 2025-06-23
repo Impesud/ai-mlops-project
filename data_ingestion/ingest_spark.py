@@ -13,7 +13,7 @@ def create_spark_session():
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ['AWS_ACCESS_KEY_ID'])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ['AWS_SECRET_ACCESS_KEY'])
-        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_DEFAULT_REGION']}.amazonaws.com")
         .getOrCreate()
     )
 
