@@ -8,7 +8,10 @@ __pycache__/
 *.DS_Store
 
 # MLflow
+<<<<<<< HEAD
 mlruns/
+=======
+>>>>>>> 86bb7e42 (Update test_train)
 !mlruns/.gitkeep
 
 #Data
