@@ -2,6 +2,8 @@
 
 .PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell
 
+export PYTHONPATH := $(shell pwd)
+
 help:
 	@echo ""
 	@echo "Available commands:"
