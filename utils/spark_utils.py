@@ -8,11 +8,7 @@ def create_spark_session(app_name="DataProcessingPipeline") -> SparkSession:
     """
     aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
     aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-<<<<<<< HEAD
     aws_region = os.environ.get("AWS_DEFAULT_REGION", "eu-central-1")
-=======
-    aws_region = os.environ.get("AWS_REGION", "us-east-1")
->>>>>>> 1dac1269 (✅ Major refactor:)
     s3_endpoint = f"s3.{aws_region}.amazonaws.com"
 
     spark = (

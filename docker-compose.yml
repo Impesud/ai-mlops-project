@@ -37,4 +37,3 @@ services:
 networks:
   ai-mlops-network:
     driver: bridge
-
