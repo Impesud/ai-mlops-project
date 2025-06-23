@@ -8,13 +8,18 @@ def test_mlflow_last_run_has_model():
     Verifies that a model was successfully logged in the last MLflow run
     for the correct experiment (from config) and that the artifact exists.
     """
+
     test_env = os.getenv("TEST_ENV", "dev")
     experiment_name = "spark-experiment" if test_env == "prod" else "sklearn-experiment"
 
+    # Ensure experiment is registered
+    experiment_id = mlflow.set_experiment(experiment_name).experiment_id
+
     runs = mlflow.search_runs(
-        experiment_names=[experiment_name],
+        experiment_ids=[experiment_id],
         order_by=["start_time DESC"]
     )
+
 
     assert not runs.empty, f"❌ No MLflow runs found for experiment '{experiment_name}' in env '{test_env}'"
 
