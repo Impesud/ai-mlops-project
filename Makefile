@@ -61,12 +61,6 @@ ingest-dev-local:
 ingest-prod-local:
 	./scripts/run_ingest.sh prod
 
-process-dev-local:
-	./scripts/run_process.sh dev
-
-process-prod-local:
-	./scripts/run_process.sh prod
-
 full-dev-local:
 	./scripts/run_pipeline.sh dev
 
@@ -109,7 +103,10 @@ train-dev:
 train-prod:
 	docker exec ai-mlops-platform python models/train.py --env prod
 
-mlflow-docker:
+# ----------------------------------------------------------
+# MLflow UI standalone
+
+mlflow:
 	docker-compose up -d mlflow-ui
 
 # ----------------------------------------------------------
