@@ -60,7 +60,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           source venv/bin/activate
-          make pipeline-dev
+          make pipeline-dev-local
 
       - name: Run full pipeline (MAIN branch)
         if: github.ref == 'refs/heads/main'
@@ -71,7 +71,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           source venv/bin/activate
-          make pipeline-prod
+          make pipeline-prod-local
 
       - name: Run unit tests
         run: |
