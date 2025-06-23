@@ -17,9 +17,6 @@ logs/*
 # Documentation
 docs/*
 
-# Data (full exclusion of data folder and all contents)
-data/
-
 # Virtual environments
 .venv/
 env/
