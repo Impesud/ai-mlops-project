@@ -118,7 +118,7 @@ jobs:
   ##################################
   docker-build-and-push:
     needs: build-and-test
-    if: github.ref == 'refs/heads/main' && success()
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -149,7 +149,7 @@ jobs:
       - name: Install MLflow
         run: pip install mlflow pandas
 
-      - name: Download model artifact
+      - name: Download trained model artifact
         uses: actions/download-artifact@v4
         with:
           name: trained-model
