@@ -114,7 +114,7 @@ jobs:
   ##################################
   docker-build-and-push:
     needs: build-and-test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && success()
     runs-on: ubuntu-latest
 
     steps:
@@ -164,7 +164,3 @@ jobs:
 
       - name: ✅ Model smoke test completed
         run: echo "Smoke test finished successfully"
-
-
-
-

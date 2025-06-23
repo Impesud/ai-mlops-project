@@ -68,7 +68,6 @@ full-prod-local:
 	./scripts/run_pipeline.sh prod
 
 # ----------------------------------------------------------
-<<<<<<< HEAD
 # Docker Compose orchestration
 
 build:
@@ -109,25 +108,12 @@ mlflow:
 
 # ----------------------------------------------------------
 # Manual S3 Sync
-=======
-# MLflow UI
-
-mlflow:
-	mlflow ui --backend-store-uri ./mlruns --port 5000
-
-# ----------------------------------------------------------
-# S3 Sync (manual)
->>>>>>> ef067a5b (Update/fix docker configuration)
 
 sync-s3:
 	bash scripts/sync_s3.sh dev
 
 # ----------------------------------------------------------
-<<<<<<< HEAD
 # Docker image build & push (standalone)
-=======
-# Docker Build & Push
->>>>>>> ef067a5b (Update/fix docker configuration)
 
 docker-build:
 	docker build -t ${DOCKER_USERNAME}/ai-mlops-project:latest .
