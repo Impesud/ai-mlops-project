@@ -4,6 +4,7 @@
 
 export PYTHONPATH := $(shell pwd)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -23,6 +24,8 @@ export PYTHONPATH := $(shell pwd)
 =======
 >>>>>>> 3f1de4a0 (Update Makefile)
 >>>>>>> fd19af90 (Update Makefile)
+=======
+>>>>>>> 9e834c1d (Update & fix CI-CD)
 
 help:
 	@echo ""
@@ -81,12 +84,27 @@ ingest-dev-local:
 ingest-prod-local:
 	./scripts/run_ingest.sh prod
 
+<<<<<<< HEAD
+=======
+process-dev-local:
+	./scripts/run_process.sh dev
+
+process-prod-local:
+	./scripts/run_process.sh prod
+
+>>>>>>> 9e834c1d (Update & fix CI-CD)
 full-dev-local:
 	./scripts/run_pipeline.sh dev
 
 full-prod-local:
 	./scripts/run_pipeline.sh prod
 
+<<<<<<< HEAD
+=======
+ml-flow-local:
+	mlflow ui --backend-store-uri ./mlruns --port 5000
+
+>>>>>>> 9e834c1d (Update & fix CI-CD)
 # ----------------------------------------------------------
 # Docker Compose orchestration
 
@@ -120,10 +138,14 @@ train-dev:
 train-prod:
 	docker exec ai-mlops-platform python models/train.py --env prod
 
+<<<<<<< HEAD
 # ----------------------------------------------------------
 # MLflow UI standalone
 
 mlflow:
+=======
+mlflow-docker:
+>>>>>>> 9e834c1d (Update & fix CI-CD)
 	docker-compose up -d mlflow-ui
 
 # ----------------------------------------------------------
