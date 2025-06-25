@@ -32,7 +32,14 @@ def load_and_split_data(path: str, test_size: float, random_seed: int, logger: l
     df["label"] = (df["action"] == "purchase").astype(int)
     df["event_time"] = pd.to_datetime(df["event_time"])
     times = df["event_time"]
-    X = df.drop(columns=["user_id", "action", "event_time", "max_event_time", "label"], errors="ignore")
+
+    feature_cols = [
+        "value", "hour", "day_of_week", "day_of_month", "week_of_year", "month",
+        "is_weekend", "total_value", "total_events", "purchase_events", "purchase_ratio",
+        "avg_events_per_day", "recency_days", "rolling_purchase_7d", "rolling_value_7d",
+        "rolling_events_7d", "rolling_avg_value_7d", "user_segment"
+    ]
+    X = df[feature_cols]
     y = df["label"]
     return train_test_split(X, y, times, test_size=test_size, random_state=random_seed, stratify=y)
 
@@ -52,12 +59,13 @@ def build_pipeline(random_seed: int, model_params: dict):
     return pipeline
 
 # ---------------------------------------------------------
-def perform_hyperparameter_search(pipeline, X_train, y_train, param_grid, random_seed: int, logger: logging.Logger):
+def perform_hyperparameter_search(pipeline, X_train, y_train, param_grid, random_seed: int, logger: logging.Logger, cv_folds: int):
     logger.info("🚀 Starting GridSearchCV...")
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
+    cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_seed)
     grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring="roc_auc", cv=cv, n_jobs=-1, verbose=2)
     grid_search.fit(X_train, y_train)
     logger.info(f"✅ Best parameters: {grid_search.best_params_}")
+    mlflow.log_params(grid_search.best_params_)
     return grid_search.best_estimator_
 
 # ---------------------------------------------------------
@@ -71,102 +79,96 @@ def calibrate_pipeline(pipeline, X_train, y_train):
 
 # ---------------------------------------------------------
 def evaluate_and_log(pipeline, X_train, y_train, X_test, y_test, t_test, logger: logging.Logger):
-    mlflow.set_tracking_uri("file:./mlruns")
-    mlflow.set_experiment("sklearn-experiment")
-    logger.info(f"MLflow tracking URI: {mlflow.get_tracking_uri()}")
+    y_proba = pipeline.predict_proba(X_test)[:, 1]
+    precisions, recalls, thresholds = precision_recall_curve(y_test, y_proba)
+    f1_scores = 2 * precisions * recalls / (precisions + recalls + 1e-8)
+    best_idx = np.nanargmax(f1_scores)
+    best_threshold = thresholds[best_idx]
+    mlflow.log_metric("best_threshold", best_threshold)
+    logger.info(f"Auto best threshold: {best_threshold:.3f}")
 
-    with mlflow.start_run():
-        y_proba = pipeline.predict_proba(X_test)[:, 1]
+    y_pred = (y_proba >= best_threshold).astype(int)
 
-        precisions, recalls, thresholds = precision_recall_curve(y_test, y_proba)
-        f1_scores = 2 * precisions * recalls / (precisions + recalls + 1e-8)
-        best_idx = np.nanargmax(f1_scores)
-        best_threshold = thresholds[best_idx]
-        mlflow.log_metric("best_threshold", best_threshold)
-        logger.info(f"Auto best threshold: {best_threshold:.3f}")
+    metrics = {
+        "test_accuracy": accuracy_score(y_test, y_pred),
+        "test_precision": precision_score(y_test, y_pred),
+        "test_recall": recall_score(y_test, y_pred),
+        "test_f1": f1_score(y_test, y_pred),
+        "test_roc_auc": roc_auc_score(y_test, y_proba)
+    }
+    for k, v in metrics.items():
+        mlflow.log_metric(k, v)
+        logger.info(f"{k}: {v:.4f}")
 
-        y_pred = (y_proba >= best_threshold).astype(int)
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    fig, ax = plt.subplots()
+    ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+    for (i, j), val in np.ndenumerate(cm):
+        ax.text(j, i, val, ha="center")
+    plt.title("Confusion Matrix")
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    plt.savefig(tmpfile.name)
+    mlflow.log_artifact(tmpfile.name, artifact_path="confusion_matrix")
+    tmpfile.close(); os.unlink(tmpfile.name)
+    plt.close()
 
-        metrics = {
-            "test_accuracy": accuracy_score(y_test, y_pred),
-            "test_precision": precision_score(y_test, y_pred),
-            "test_recall": recall_score(y_test, y_pred),
-            "test_f1": f1_score(y_test, y_pred),
-            "test_roc_auc": roc_auc_score(y_test, y_proba)
-        }
-        for k, v in metrics.items():
-            mlflow.log_metric(k, v)
-            logger.info(f"{k}: {v:.4f}")
+    # Classification Report
+    cr = pd.DataFrame(classification_report(y_test, y_pred, output_dict=True)).transpose()
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".parquet", delete=False)
+    cr.to_parquet(tmpfile.name)
+    mlflow.log_artifact(tmpfile.name, artifact_path="classification_report")
+    tmpfile.close(); os.unlink(tmpfile.name)
 
-        # Confusion Matrix (temporary file)
-        cm = confusion_matrix(y_test, y_pred)
-        fig, ax = plt.subplots()
-        ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-        for (i, j), val in np.ndenumerate(cm):
-            ax.text(j, i, val, ha="center")
-        plt.title("Confusion Matrix")
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            plt.savefig(tmpfile.name)
-            mlflow.log_artifact(tmpfile.name)
-            os.unlink(tmpfile.name)
-        plt.close()
+    # ROC Curve
+    fig, ax = plt.subplots()
+    RocCurveDisplay.from_predictions(y_test, y_proba, ax=ax)
+    plt.title("ROC Curve")
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    plt.savefig(tmpfile.name)
+    mlflow.log_artifact(tmpfile.name, artifact_path="roc_curve")
+    tmpfile.close(); os.unlink(tmpfile.name)
+    plt.close()
 
-        # Classification Report
-        cr = pd.DataFrame(classification_report(y_test, y_pred, output_dict=True)).transpose()
-        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmpfile:
-            cr.to_csv(tmpfile.name)
-            mlflow.log_artifact(tmpfile.name)
-            os.unlink(tmpfile.name)
+    # Precision-Recall Curve
+    fig, ax = plt.subplots()
+    PrecisionRecallDisplay.from_predictions(y_test, y_proba, ax=ax)
+    plt.title("Precision-Recall Curve")
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    plt.savefig(tmpfile.name)
+    mlflow.log_artifact(tmpfile.name, artifact_path="precision_recall_curve")
+    tmpfile.close(); os.unlink(tmpfile.name)
+    plt.close()
 
-        # ROC Curve
-        fig, ax = plt.subplots()
-        RocCurveDisplay.from_predictions(y_test, y_proba, ax=ax)
-        plt.title("ROC Curve")
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            plt.savefig(tmpfile.name)
-            mlflow.log_artifact(tmpfile.name)
-            os.unlink(tmpfile.name)
-        plt.close()
+    # Rolling window metrics (7 days)
+    df_roll = pd.DataFrame({'date': t_test.dt.floor('D'), 'y_true': y_test, 'y_proba': y_proba})
+    daily = df_roll.groupby('date').agg({'y_true': list, 'y_proba': list}).reset_index()
+    if len(daily) >= 7:
+        roll_metrics = []
+        for i in range(6, len(daily)):
+            window = daily.iloc[i-6:i+1]
+            yt = np.concatenate(window['y_true'].to_list())
+            pr = np.concatenate(window['y_proba'].to_list())
+            yp = (pr >= best_threshold).astype(int)
+            roll_metrics.append({
+                'period': f"{window.iloc[0]['date'].date()} to {window.iloc[-1]['date'].date()}",
+                'precision': precision_score(yt, yp, zero_division=0),
+                'recall': recall_score(yt, yp, zero_division=0),
+                'f1': f1_score(yt, yp, zero_division=0),
+                'roc_auc': roc_auc_score(yt, pr) if len(np.unique(yt)) > 1 else np.nan
+            })
+        roll_df = pd.DataFrame(roll_metrics)
+        tmpfile = tempfile.NamedTemporaryFile(suffix=".parquet", delete=False)
+        roll_df.to_parquet(tmpfile.name)
+        mlflow.log_artifact(tmpfile.name, artifact_path="rolling_metrics")
+        tmpfile.close(); os.unlink(tmpfile.name)
 
-        # Precision-Recall Curve
-        fig, ax = plt.subplots()
-        PrecisionRecallDisplay.from_predictions(y_test, y_proba, ax=ax)
-        plt.title("Precision-Recall Curve")
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            plt.savefig(tmpfile.name)
-            mlflow.log_artifact(tmpfile.name)
-            os.unlink(tmpfile.name)
-        plt.close()
-
-        # Rolling window metrics (7 days)
-        df_roll = pd.DataFrame({'date': t_test.dt.floor('D'), 'y_true': y_test, 'y_proba': y_proba})
-        daily = df_roll.groupby('date').agg({'y_true': list, 'y_proba': list}).reset_index()
-        if len(daily) >= 7:
-            roll_metrics = []
-            for i in range(6, len(daily)):
-                window = daily.iloc[i-6:i+1]
-                yt = np.concatenate(window['y_true'].to_list())
-                pr = np.concatenate(window['y_proba'].to_list())
-                yp = (pr >= best_threshold).astype(int)
-                roll_metrics.append({
-                    'period': f"{window.iloc[0]['date'].date()} to {window.iloc[-1]['date'].date()}",
-                    'precision': precision_score(yt, yp, zero_division=0),
-                    'recall': recall_score(yt, yp, zero_division=0),
-                    'f1': f1_score(yt, yp, zero_division=0),
-                    'roc_auc': roc_auc_score(yt, pr) if len(np.unique(yt)) > 1 else np.nan
-                })
-            roll_df = pd.DataFrame(roll_metrics)
-            with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmpfile:
-                roll_df.to_csv(tmpfile.name, index=False)
-                mlflow.log_artifact(tmpfile.name)
-                os.unlink(tmpfile.name)
-
-        # Full model export to MLflow
-        input_example = X_train.head(5).copy()
-        for col in input_example.select_dtypes("integer").columns:
-            input_example[col] = input_example[col].astype("float64")
-        sig = infer_signature(input_example, pipeline.predict(input_example))
-        mlflow.sklearn.log_model(pipeline, artifact_path="model", input_example=input_example, signature=sig)
+    # Full model export
+    input_example = X_train.head(5).copy()
+    for col in input_example.select_dtypes("integer").columns:
+        input_example[col] = input_example[col].astype("float64")
+    sig = infer_signature(input_example, pipeline.predict(input_example))
+    mlflow.sklearn.log_model(pipeline, artifact_path="model", input_example=input_example, signature=sig)
 
 # ---------------------------------------------------------
 def main(env: str):
@@ -174,17 +176,23 @@ def main(env: str):
     cfg = load_env_config(env)
     data_cfg, model_cfg = cfg["data"], cfg["model"]
 
-    X_train, X_test, y_train, y_test, t_train, t_test = load_and_split_data(
-        data_cfg["local_processed_path"], model_cfg.get("test_size", 0.2), model_cfg.get("random_seed", 42), logger)
+    mlflow.set_tracking_uri("file:./mlruns")
+    mlflow.set_experiment("sklearn-experiment")
+    logger.info(f"MLflow tracking URI: {mlflow.get_tracking_uri()}")
 
-    pipeline = build_pipeline(model_cfg.get("random_seed", 42), model_cfg.get("model_params", {}))
+    with mlflow.start_run():
+        X_train, X_test, y_train, y_test, t_train, t_test = load_and_split_data(
+            data_cfg["local_processed_path"], model_cfg.get("test_size", 0.2), model_cfg.get("random_seed", 42), logger)
 
-    if model_cfg.get("do_hyper_search", False):
-        param_grid = model_cfg.get("param_grid", {})
-        pipeline = perform_hyperparameter_search(pipeline, X_train, y_train, param_grid, model_cfg.get("random_seed", 42), logger)
+        pipeline = build_pipeline(model_cfg.get("random_seed", 42), model_cfg.get("model_params", {}))
 
-    pipeline = calibrate_pipeline(pipeline, X_train, y_train)
-    evaluate_and_log(pipeline, X_train, y_train, X_test, y_test, t_test, logger)
+        if model_cfg.get("do_hyper_search", False):
+            param_grid = model_cfg.get("param_grid", {})
+            cv_folds = model_cfg.get("cv_folds", 5)
+            pipeline = perform_hyperparameter_search(pipeline, X_train, y_train, param_grid, model_cfg.get("random_seed", 42), logger, cv_folds)
+
+        pipeline = calibrate_pipeline(pipeline, X_train, y_train)
+        evaluate_and_log(pipeline, X_train, y_train, X_test, y_test, t_test, logger)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
@@ -192,4 +200,7 @@ if __name__ == "__main__":
     parser.add_argument("--env", type=str, default="dev", help="Environment: dev or prod")
     args = parser.parse_args()
     main(args.env)
+
+
+
 

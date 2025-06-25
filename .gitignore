@@ -23,7 +23,7 @@ data/processed/prod/*
 logs/*
 
 # Documentation
-docs/*
+docs/reports/*
 
 # Virtual environments
 .venv/

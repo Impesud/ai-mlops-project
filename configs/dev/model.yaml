@@ -1,6 +1,25 @@
 input_path: "s3a://my-mlops-processed-data/dev/"
 test_size: 0.2
 random_seed: 42
+features:
+  - value
+  - hour
+  - day_of_week
+  - day_of_month
+  - week_of_year
+  - month
+  - is_weekend
+  - total_value
+  - total_events
+  - purchase_events
+  - purchase_ratio
+  - avg_events_per_day
+  - recency_days
+  - rolling_purchase_7d
+  - rolling_value_7d
+  - rolling_events_7d
+  - rolling_avg_value_7d
+  - user_segment
 model_params:
     max_depth: 10
     n_estimators: 100

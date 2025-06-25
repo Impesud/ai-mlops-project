@@ -1,4 +1,6 @@
-aws_schema = {
+# schemas.py
+
+aws_schema = { 
     "access_key_id": {"type": "string", "required": True, "empty": False},
     "secret_access_key": {"type": "string", "required": True, "empty": False},
     "region": {"type": "string", "required": True, "empty": False},
@@ -23,29 +25,30 @@ generative_ai_schema = {
     "output_path": {"type": "string", "required": True, "empty": False},
 }
 
-model_schema = {
+# ----------------- MODEL SCHEMA SKLEARN --------------------
+model_schema_sklearn = {
     "input_path": {"type": "string", "required": True, "empty": False},
     "test_size": {"type": "float", "required": True, "min": 0, "max": 1},
     "random_seed": {"type": "integer", "required": True},
-    "features": {"type": "list", "required": False, "schema": {"type": "string"}},
 
-    # Default model parameters for RandomForestClassifier
+    "features": {"type": "list", "required": True, "schema": {"type": "string"}},
+
     "model_params": {
         "type": "dict",
         "required": True,
         "schema": {
-            "n_estimators": {"type": "integer", "required": True, "min": 1},
-            "max_depth": {"type": "integer", "required": True, "min": 1},
-            "min_samples_leaf": {"type": "integer", "required": False, "min": 1},
+            "n_estimators": {"type": "integer", "min": 1, "required": False},
+            "max_depth": {"type": "integer", "min": 1, "required": False},
+            "min_samples_leaf": {"type": "integer", "min": 1, "required": False},
             "max_features": {"type": ["string", "float"], "required": False},
-            "class_weight": {"type": "string", "required": False, "allowed": ["balanced", "balanced_subsample"]}
+            "class_weight": {
+                "type": "string",
+                "allowed": ["balanced", "balanced_subsample"],
+                "required": False
+            },
         }
     },
-    # Flag to enable hyperparameter search
-    "do_hyper_search": {"type": "boolean", "required": False},
-    # Number of folds for cross-validation
-    "cv_folds": {"type": "integer", "required": False, "min": 2},
-    # Grid for hyperparameter search
+
     "param_grid": {
         "type": "dict",
         "required": False,
@@ -55,6 +58,41 @@ model_schema = {
             "schema": {"type": ["integer", "float", "string"]}
         }
     },
-    # Parallelism for grid search
+
+    "do_hyper_search": {"type": "boolean", "required": False},
+    "cv_folds": {"type": "integer", "required": False, "min": 2},
+}
+
+# ----------------- MODEL SCHEMA SPARK --------------------
+model_schema_spark = {
+    "input_path": {"type": "string", "required": True, "empty": False},
+    "test_size": {"type": "float", "required": True, "min": 0, "max": 1},
+    "random_seed": {"type": "integer", "required": True},
+    "features": {"type": "list", "required": True, "schema": {"type": "string"}},
+
+    "model_params": {
+        "type": "dict",
+        "required": True,
+        "schema": {
+            "maxIter": {"type": "integer", "min": 1, "required": True},
+            "maxDepth": {"type": "integer", "min": 1, "required": True},
+            "stepSize": {"type": "float", "min": 0, "required": True},
+            "subsamplingRate": {"type": "float", "min": 0, "max": 1, "required": True},
+            "minInstancesPerNode": {"type": "integer", "min": 1, "required": True},
+            "minInfoGain": {"type": "float", "min": 0, "required": True},
+        }
+    },
+
+    "grid": {
+        "type": "dict",
+        "required": False,
+        "keysrules": {"type": "string"},
+        "valuesrules": {
+            "type": "list",
+            "schema": {"type": ["integer", "float", "string"]}
+        }
+    },
+
+    "numFolds": {"type": "integer", "required": False, "min": 2},
     "parallelism": {"type": "integer", "required": False, "min": 1}
 }

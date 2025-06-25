@@ -67,6 +67,9 @@ full-dev-local:
 full-prod-local:
 	./scripts/run_pipeline.sh prod
 
+ml-flow-local:
+	mlflow ui --backend-store-uri ./mlruns --port 5000
+
 # ----------------------------------------------------------
 # Docker Compose orchestration
 
@@ -100,10 +103,7 @@ train-dev:
 train-prod:
 	docker exec ai-mlops-platform python models/train.py --env prod
 
-# ----------------------------------------------------------
-# MLflow UI standalone
-
-mlflow:
+mlflow-docker:
 	docker-compose up -d mlflow-ui
 
 # ----------------------------------------------------------

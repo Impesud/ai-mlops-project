@@ -1,83 +1,37 @@
 import os
-import sys
 import argparse
-import subprocess
-import time
-from pyspark.sql.functions import when, lit, col
+import numpy as np
+import pandas as pd
+import mlflow
+import mlflow.spark
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
+from PIL import Image
+
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, lit
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator, BinaryClassificationEvaluator
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-import mlflow
-import mlflow.spark
+from pyspark.ml.evaluation import BinaryClassificationEvaluator, MulticlassClassificationEvaluator
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, roc_auc_score, roc_curve, auc, f1_score
+
 from utils.io import load_env_config
 from utils.logging_utils import setup_logger
-from sklearn.metrics import confusion_matrix
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-def start_mlflow_ui(logger):
-    logger.info("🔪 Starting MLflow UI in background…")
-    try:
-        subprocess.Popen([
-            sys.executable, "-m", "mlflow", "ui",
-            "--backend-store-uri", "./mlruns",
-            "--port", "5000"
-        ])
-        if sys.stdin.isatty():
-            input("Press Enter to close MLflow UI and exit…")
-        else:
-            logger.info("📱 MLflow UI started in background.")
-            time.sleep(3)
-    except Exception as e:
-        logger.warning(f"⚠️ Could not start MLflow UI: {e}")
-
-def plot_confusion_matrix(cm, classes, logger):
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=classes, yticklabels=classes)
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.title('Confusion Matrix')
-    plt.tight_layout()
-    fig_path = "confusion_matrix.png"
-    plt.savefig(fig_path)
-    plt.close()
-    mlflow.log_artifact(fig_path)
-    logger.info(f"📊 Confusion matrix saved and logged to MLflow: {fig_path}")
-
-def main(mode: str, data_cfg=None, model_cfg=None, start_ui: bool = False):
-    logger = setup_logger("train_spark", mode)
-
-    # Load config from train.py or from environment
-    if data_cfg is None or model_cfg is None:
-        cfg = load_env_config(mode)
-        data_cfg = cfg["data"]
-        model_cfg = cfg["model"]
-
-    input_path = data_cfg["local_processed_path"]
-    test_ratio = model_cfg.get("test_size", 0.2)
-    model_params = model_cfg.get("model_params", {})
-
-    # Map config parameters to Spark parameters
-    if "n_estimators" in model_params:
-        model_params["maxIter"] = model_params.pop("n_estimators")
-    if "max_depth" in model_params:
-        model_params["maxDepth"] = model_params.pop("max_depth")
-
-    logger.info(f"Active mode: {mode}")
-    logger.info(f"Input file: {input_path}")
-
-    spark = (
+# ------------------------------------------------------------------------
+def start_spark():
+    return (
         SparkSession.builder
         .appName("SparkModelTraining")
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", os.environ['AWS_ACCESS_KEY_ID'])
         .config("spark.hadoop.fs.s3a.secret.key", os.environ['AWS_SECRET_ACCESS_KEY'])
-        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_REGION']}.amazonaws.com")
+        .config("spark.hadoop.fs.s3a.endpoint", f"s3.{os.environ['AWS_DEFAULT_REGION']}.amazonaws.com")
+        .config("spark.sql.debug.maxToStringFields", "100")
         .config("spark.driver.memory", "16g")
         .config("spark.executor.memory", "16g")
         .config("spark.driver.maxResultSize", "2g")
@@ -86,225 +40,228 @@ def main(mode: str, data_cfg=None, model_cfg=None, start_ui: bool = False):
         .config("spark.executor.heartbeatInterval", "60s")
         .config("spark.eventLog.enabled", "true")
         .config("spark.eventLog.dir", "./logs/spark-events")
+        # For cluster/cloud environments, you might need to adjust the following:
+        #.config("spark.sql.shuffle.partitions", "200")
+        #.config("spark.default.parallelism", "200")
+        #.config("spark.sql.execution.arrow.pyspark.enabled", "true")
+        #.config("spark.sql.adaptive.enabled", "true")
+        #.config("spark.sql.adaptive.coalescePartitions.enabled", "true")
+        #.config("spark.dynamicAllocation.enabled", "true")
         .getOrCreate()
     )
-    logger.info(f"✨ Spark session started. Version: {spark.version}")
 
-    try:
-        df = spark.read.parquet(input_path)
-        logger.info(f"✅ Loaded processed data with {df.count()} rows.")
+# ------------------------------------------------------------------------
+def create_labels(df):
+    if 'label' not in df.columns:
+        df = df.withColumn("label", when(col("action") == "purchase", 1.0).otherwise(0.0))
+    return df
 
-        # 1. Create binary label: 1 only for "purchase", 0 for everything else
-        df = df.withColumn(
-            "label",
-            when(col("action") == "purchase", 1.0).otherwise(0.0)
-        )
+# ------------------------------------------------------------------------
+def compute_class_weights(df):
+    counts = df.groupBy("label").count().toPandas()
+    total = counts["count"].sum()
+    weights = {row['label']: total / row['count'] for _, row in counts.iterrows()}
+    return weights
 
-        # 2. Log class distribution
-        class_dist = df.groupBy("label").count().orderBy("label").toPandas()
-        logger.info(f"📊 Class distribution:\n{class_dist.to_string(index=False)}")
+# ------------------------------------------------------------------------
+def apply_class_weights(df, weights):
+    expr = lit(1.0)
+    for label, weight in weights.items():
+        expr = when(col("label") == label, lit(weight)).otherwise(expr)
+    return df.withColumn("class_weight", expr)
 
-        total = df.count()
-        class_counts = df.groupBy("label").count().collect()
-        class_weights = {row['label']: total / row['count'] for row in class_counts}
-        logger.info(f"⚖️ Class weights: {class_weights}")
+# ------------------------------------------------------------------------
+def build_pipeline(features, model_params):
+    assembler = VectorAssembler(inputCols=features, outputCol="features")
+    gbt = GBTClassifier(
+        featuresCol="features",
+        labelCol="label",
+        weightCol="class_weight",
+        seed=model_params.get("random_seed", 42),
+        maxIter=model_params.get("maxIter", 40),
+        maxDepth=model_params.get("maxDepth", 10),
+        stepSize=model_params.get("stepSize", 0.05),
+        subsamplingRate=model_params.get("subsamplingRate", 1.0),
+        minInstancesPerNode=model_params.get("minInstancesPerNode", 1),
+        minInfoGain=model_params.get("minInfoGain", 0.0)
+    )
+    return Pipeline(stages=[assembler, gbt]), gbt
 
-        # 3. Check for binary labels only (GBTClassifier requirement)
-        unique_labels = sorted(class_weights.keys())
-        if set(unique_labels) - {0.0, 1.0}:
-            logger.error(f"❌ GBTClassifier supports only binary labels (0.0, 1.0), found: {unique_labels}")
-            raise ValueError("Non-binary labels found! Please check your label creation logic.")
+# ------------------------------------------------------------------------
+def build_param_grid(gbt, grid_cfg):
+    builder = ParamGridBuilder()
+    if grid_cfg:
+        for param, values in grid_cfg.items():
+            spark_param = getattr(gbt, param)
+            builder = builder.addGrid(spark_param, values)
+    return builder.build()
 
-        # 4. Build class_weight column only if classes are imbalanced
-        min_count = min([row['count'] for row in class_counts])
-        max_count = max([row['count'] for row in class_counts])
-        imbalance_ratio = max_count / min_count if min_count > 0 else 1
-        use_class_weight = imbalance_ratio > 1.5  # threshold can be tuned
+# ------------------------------------------------------------------------
+def plot_conf_matrix(y_true, y_pred, logger):
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title("Confusion Matrix")
 
-        if use_class_weight:
-            expr = lit(1.0)
-            for label, weight in class_weights.items():
-                expr = when(col("label") == float(label), lit(weight)).otherwise(expr)
-            df = df.withColumn("class_weight", expr)
-            logger.info("⚖️ Using class weights for training.")
-        else:
-            df = df.withColumn("class_weight", lit(1.0))
-            logger.info("ℹ️ Skipping class weights: classes are balanced.")
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
 
-       # 5. Define features and pipeline (features from model config)
-        random_seed = model_cfg.get("random_seed", 42)
-        feature_cols = model_cfg.get("features", ["value", "hour", "day_of_week", "month"])
-        assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
-        classifier = GBTClassifier(
-            featuresCol="features",
-            labelCol="label",
-            weightCol="class_weight",
-            maxIter=model_params.get("maxIter", 40),
-            maxDepth=model_params.get("maxDepth", 10),
-            stepSize=model_params.get("stepSize", 0.05),
-            seed=random_seed
-        )
-        pipeline = Pipeline(stages=[assembler, classifier])
+    image = Image.open(buf)
+    mlflow.log_image(image, "confusion_matrix.png")
+    logger.info("📊 Confusion matrix logged.")
 
-        # 6. Train/test split
-        test_ratio = model_cfg.get("test_size", 0.2)
-        train_data, test_data = df.randomSplit([1 - test_ratio, test_ratio], seed=random_seed)
+# ------------------------------------------------------------------------
+def plot_roc_curve(y_true, y_scores, logger):
+    fpr, tpr, thresholds = roc_curve(y_true, y_scores)
+    roc_auc = auc(fpr, tpr)
 
-        mlflow.set_tracking_uri("file:./mlruns")
-        mlflow.set_experiment("spark-experiment")
+    plt.figure(figsize=(6, 5))
+    plt.plot(fpr, tpr, color='blue', label=f"ROC curve (AUC = {roc_auc:.2f})")
+    plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve")
+    plt.legend()
 
-        with mlflow.start_run() as run:
-            # 7. Hyperparameter grid for cross-validation (from model config if present)
-            grid_cfg = model_cfg.get("grid", {})
-            paramGridBuilder = ParamGridBuilder()
-            if "maxIter" in grid_cfg:
-                paramGridBuilder = paramGridBuilder.addGrid(classifier.maxIter, grid_cfg["maxIter"])
-            if "maxDepth" in grid_cfg:
-                paramGridBuilder = paramGridBuilder.addGrid(classifier.maxDepth, grid_cfg["maxDepth"])
-            if "stepSize" in grid_cfg:
-                paramGridBuilder = paramGridBuilder.addGrid(classifier.stepSize, grid_cfg["stepSize"])
-            paramGrid = paramGridBuilder.build()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
 
-            evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
+    image = Image.open(buf)
 
-            crossval = CrossValidator(
-                estimator=pipeline,
-                estimatorParamMaps=paramGrid,
-                evaluator=evaluator,
-                numFolds=model_cfg.get("numFolds", 2),
-                parallelism=model_cfg.get("parallelism", 2)
-            )
+    mlflow.log_image(image, "roc_curve.png")
+    logger.info("📈 ROC curve logged.")
 
-            logger.info("🚀 Training Spark GBT model with CrossValidator...")
-            cvModel = crossval.fit(train_data)
-            model = cvModel.bestModel
-            spark.catalog.clearCache()
-            best_params = {p.name: v for p, v in model.stages[-1].extractParamMap().items()}
-            logger.info(f"🏆 Best Params (clean): {best_params}")
+    return fpr, tpr, thresholds, roc_auc
 
-            # Log feature importances
-            importances = model.stages[-1].featureImportances
-            logger.info(f"🌟 Feature importances: {importances}")
-            for name, score in zip(feature_cols, importances):
-                logger.info(f"Feature: {name} - Importance: {score}")
+# ------------------------------------------------------------------------
+def find_best_threshold(fpr, tpr, thresholds):
+    youden_index = tpr - fpr
+    best_idx = np.argmax(youden_index)
+    best_threshold = thresholds[best_idx]
+    mlflow.log_param("best_threshold", best_threshold)
+    return best_threshold
 
-            predictions_train = model.transform(train_data)
-            predictions_test = model.transform(test_data)
+# ------------------------------------------------------------------------
+def compute_metrics_at_threshold(y_true, y_scores, threshold):
+    y_pred_adjusted = (y_scores >= threshold).astype(int)
+    precision = precision_score(y_true, y_pred_adjusted, zero_division=0)
+    recall = recall_score(y_true, y_pred_adjusted, zero_division=0)
+    f1_adj = f1_score(y_true, y_pred_adjusted, zero_division=0)
+    mlflow.log_metric("precision_adj", precision)
+    mlflow.log_metric("recall_adj", recall)
+    mlflow.log_metric("f1_adj", f1_adj)
+    return y_pred_adjusted
 
-            # 8. Metrics logging (accuracy, F1, precision, recall, ROC AUC)
-            train_accuracy = evaluator.evaluate(predictions_train, {evaluator.metricName: "accuracy"})
-            test_accuracy = evaluator.evaluate(predictions_test, {evaluator.metricName: "accuracy"})
-            f1 = evaluator.evaluate(predictions_test, {evaluator.metricName: "f1"})
-            precision = evaluator.evaluate(predictions_test, {evaluator.metricName: "weightedPrecision"})
-            recall = evaluator.evaluate(predictions_test, {evaluator.metricName: "weightedRecall"})
+# ------------------------------------------------------------------------
+def rolling_evaluation(pred_pd, threshold):
+    pred_pd["event_date"] = pd.to_datetime(pred_pd["event_time"]).dt.floor("D")
+    daily = pred_pd.groupby("event_date").agg(list).reset_index()
+    roll_metrics = []
 
-            # Log ROC AUC for binary classification
-            binary_evaluator = BinaryClassificationEvaluator(labelCol="label", rawPredictionCol="rawPrediction", metricName="areaUnderROC")
-            auc = binary_evaluator.evaluate(predictions_test)
-            logger.info(f"ROC AUC: {auc:.4f}")
-            mlflow.log_metric("roc_auc", auc)
+    for i in range(6, len(daily)):
+        window = daily.iloc[i-6:i+1]
+        yt = np.concatenate(window["label"].to_list())
+        pr = np.concatenate(window["probability"].apply(lambda x: [p[1] for p in x]).to_list())
+        yp = (pr >= threshold).astype(int)
+        roll_metrics.append({
+            "period": f"{window.iloc[0]['event_date'].date()} to {window.iloc[-1]['event_date'].date()}",
+            "precision": precision_score(yt, yp, zero_division=0),
+            "recall": recall_score(yt, yp, zero_division=0),
+            "f1": f1_score(yt, yp, zero_division=0),
+            "roc_auc": roc_auc_score(yt, pr) if len(np.unique(yt)) > 1 else np.nan
+        })
 
-            logger.info(f"✅ Train Accuracy: {train_accuracy:.4f}, Test Accuracy: {test_accuracy:.4f}, F1: {f1:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}")
+    roll_df = pd.DataFrame(roll_metrics)
+    mlflow.log_table(roll_df, "rolling_metrics.parquet")
 
-            mlflow.log_metrics({
-                "train_accuracy": train_accuracy,
-                "test_accuracy": test_accuracy,
-                "f1_score": f1,
-                "precision": precision,
-                "recall": recall
-            })
-            mlflow.log_params(model_params)
-            mlflow.log_param("train_rows", train_data.count())
-            mlflow.log_param("test_rows", test_data.count())
+# ------------------------------------------------------------------------
+def main(env):
+    logger = setup_logger("train_spark", env)
+    cfg = load_env_config(env)
+    data_cfg = cfg["data"]
+    model_cfg = cfg["model"]
 
-            # Log confusion matrix
-            preds_pd = predictions_test.select("prediction", "label").toPandas()
-            cm = confusion_matrix(preds_pd["label"], preds_pd["prediction"])
-            classes = sorted(np.unique(preds_pd["label"]))
-            plot_confusion_matrix(cm, classes=[f"Class {int(c)}" for c in classes], logger=logger)
+    input_path = data_cfg["local_processed_path"]
+    features = model_cfg["features"]
+    test_size = model_cfg["test_size"]
+    seed = model_cfg["random_seed"]
+    model_params = model_cfg["model_params"]
+    grid_cfg = model_cfg.get("grid", {})
+    numFolds = model_cfg.get("numFolds", 2)
+    parallelism = model_cfg.get("parallelism", 2)
 
-            input_example = df.select("value", "hour", "day_of_week", "month").limit(5)
-            input_example = input_example.selectExpr("cast(value as double) as value",
-                                         "cast(hour as double) as hour",
-                                         "cast(day_of_week as double) as day_of_week",
-                                         "cast(month as double) as month")
+    logger.info(f"Loaded config for environment: {env}")
 
-            try:
-                mlflow.spark.log_model(model, artifact_path="model", input_example=input_example.toPandas())
-                logger.info("📦 Spark model logged to MLflow under 'model'.")
+    spark = start_spark()
+    df = spark.read.parquet(input_path)
+    df = create_labels(df)
+    
+    num_cores = int(os.environ.get("NUM_CORES", 8))
+    num_partitions = num_cores * 2
+    df = df.repartition(num_partitions).persist()
 
-                run_id = mlflow.active_run().info.run_id
-                model_uri = f"runs:/{run_id}/model"
-                model_name = "SparkGBTModel"
+    weights = compute_class_weights(df)
+    df = apply_class_weights(df, weights)
 
-                client = mlflow.tracking.MlflowClient()
-                try:
-                    prev_versions = client.get_latest_versions(model_name, stages=["None", "Staging", "Production"])
-                except Exception:
-                    prev_versions = []
+    train, test = df.randomSplit([1 - test_size, test_size], seed=seed)
 
-                has_previous = len(prev_versions) > 0
-                best_prev_f1 = None
-                best_prev_auc = None
+    pipeline, gbt = build_pipeline(features, model_params)
+    param_grid = build_param_grid(gbt, grid_cfg)
 
-                # Search for best previous F1 and ROC AUC
-                for v in prev_versions:
-                    prev_run = client.get_run(v.run_id)
-                    prev_f1 = prev_run.data.metrics.get("f1_score")
-                    prev_auc = prev_run.data.metrics.get("roc_auc")
-                    if prev_f1 is not None:
-                        if best_prev_f1 is None or prev_f1 > best_prev_f1:
-                            best_prev_f1 = prev_f1
-                    if prev_auc is not None:
-                        if best_prev_auc is None or prev_auc > best_prev_auc:
-                            best_prev_auc = prev_auc
+    evaluator = BinaryClassificationEvaluator(labelCol="label", metricName="areaUnderROC")
 
-                # Register model if no previous or if performance is better (using F1-score as main metric)
-                if not has_previous or best_prev_f1 is None or f1 > best_prev_f1:
-                    result = mlflow.register_model(model_uri=model_uri, name=model_name)
-                    if not has_previous:
-                        logger.info(
-                            f"✅ Registered first model version ({result.version}) with f1_score={f1:.4f}"
-                        )
-                    else:
-                        logger.info(
-                            f"✅ Registered new model version ({result.version}) with f1_score={f1:.4f} "
-                            f"(previous best: {best_prev_f1 if best_prev_f1 is not None else 'N/A'})"
-                        )
-                else:
-                    logger.info(
-                        f"ℹ️ Model NOT registered: f1_score={f1:.4f} <= previous best ({best_prev_f1:.4f})"
-                    )
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to log/register Spark model to MLflow: {e}")
+    crossval = CrossValidator(
+        estimator=pipeline,
+        estimatorParamMaps=param_grid,
+        evaluator=evaluator,
+        numFolds=numFolds,
+        parallelism=parallelism
+    )
 
-        logger.info("🌾 MLflow run completed.")
+    mlflow.set_tracking_uri("file:./mlruns")
+    mlflow.set_experiment("spark-experiment")
 
-    except Exception as e:
-        logger.exception(f"❌ Training pipeline failed: {e}")
-        raise
+    with mlflow.start_run():
+        logger.info("🚀 Training with full evaluation...")
+        model = crossval.fit(train).bestModel
 
-    finally:
-        try:
-            spark.stop()
-            logger.info("🚩 Spark session stopped.")
-        except Exception as stop_err:
-            logger.warning(f"⚠️ Failed to stop Spark session cleanly: {stop_err}")
+        preds = model.transform(test).cache()
+        pred_pd = preds.select("label", "probability", "event_time").toPandas()
+        y_true = pred_pd["label"].astype(int)
+        y_scores = pred_pd["probability"].apply(lambda x: float(x[1])).values
 
-    if start_ui:
-        start_mlflow_ui(logger)
+        auc_value = evaluator.evaluate(preds)
+        acc = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy").evaluate(preds)
+        f1_spark = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="f1").evaluate(preds)
 
+        mlflow.log_metrics({"roc_auc": auc_value, "accuracy": acc, "f1_score": f1_spark})
+
+        # ROC + threshold tuning
+        fpr, tpr, thresholds, roc_auc_final = plot_roc_curve(y_true, y_scores, logger)
+        best_threshold = find_best_threshold(fpr, tpr, thresholds)
+        y_pred_adjusted = compute_metrics_at_threshold(y_true, y_scores, best_threshold)
+        plot_conf_matrix(y_true, y_pred_adjusted, logger)
+
+        # Rolling evaluation
+        rolling_evaluation(pred_pd, best_threshold)
+
+        mlflow.log_params(model_params)
+        mlflow.log_param("train_rows", train.count())
+        mlflow.log_param("test_rows", test.count())
+
+        mlflow.spark.log_model(model, artifact_path="model")
+        logger.info("✅ Model fully logged to MLflow.")
+
+    spark.stop()
+
+# ------------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", type=str, default="prod", help="Environment: dev or prod")
-    parser.add_argument("--mlflow-ui", action="store_true", help="Start MLflow UI after training")
     args = parser.parse_args()
-
-    main(args.env, start_ui=args.mlflow_ui)
-
-
-
-
-
-
+    main(args.env)
 
