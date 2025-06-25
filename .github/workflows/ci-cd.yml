@@ -63,9 +63,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
-          make ingest-dev
-          make process-dev
-          make train-dev
+          make ingest-dev-local
+          make process-dev-local
+          make train-dev-local
 
       #############################
       ## Run full pipeline (MAIN)
@@ -79,9 +79,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
-          make ingest-prod
-          make process-prod
-          make train-prod
+          make ingest-prod-local
+          make process-prod-local
+          make train-prod-local
 
       ######################
       ## Run unit tests   ##

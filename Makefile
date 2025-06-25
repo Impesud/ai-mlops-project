@@ -61,6 +61,12 @@ ingest-dev-local:
 ingest-prod-local:
 	./scripts/run_ingest.sh prod
 
+process-dev-local:
+	./scripts/run_process.sh dev
+
+process-prod-local:
+	./scripts/run_process.sh prod
+
 full-dev-local:
 	./scripts/run_pipeline.sh dev
 
