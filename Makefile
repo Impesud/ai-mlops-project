@@ -3,26 +3,6 @@
 .PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell
 
 export PYTHONPATH := $(shell pwd)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-# AI MLOps Project Makefile
-
-<<<<<<< HEAD
-.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow-ui sync-s3
->>>>>>> 1dac1269 (✅ Major refactor:)
-=======
-.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean
->>>>>>> ef067a5b (Update/fix docker configuration)
-=======
-# AI MLOps Project Makefile (Hybrid: Local & Dockerized)
-
-.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell
->>>>>>> c87e1056 (Update Docker system)
-=======
->>>>>>> 3f1de4a0 (Update Makefile)
->>>>>>> fd19af90 (Update Makefile)
 
 help:
 	@echo ""
@@ -81,6 +61,12 @@ ingest-dev-local:
 ingest-prod-local:
 	./scripts/run_ingest.sh prod
 
+process-dev-local:
+	./scripts/run_process.sh dev
+
+process-prod-local:
+	./scripts/run_process.sh prod
+
 full-dev-local:
 	./scripts/run_pipeline.sh dev
 
@@ -123,10 +109,7 @@ train-dev:
 train-prod:
 	docker exec ai-mlops-platform python models/train.py --env prod
 
-# ----------------------------------------------------------
-# MLflow UI standalone
-
-mlflow:
+mlflow-docker:
 	docker-compose up -d mlflow-ui
 
 # ----------------------------------------------------------
