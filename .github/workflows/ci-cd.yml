@@ -63,7 +63,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
-          make pipeline-dev-local
+          make ingest-dev
+          make process-dev
+          make train-dev
 
       #############################
       ## Run full pipeline (MAIN)
@@ -77,7 +79,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
-          make pipeline-prod-local
+          make ingest-prod
+          make process-prod
+          make train-prod
 
       ######################
       ## Run unit tests   ##
@@ -130,9 +134,9 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest
 
-  ##################################
+  ############################################
   ## MODEL SMOKE TEST (ONLY IF MODELS CHANGED)
-  ##################################
+  ############################################
   model-smoke-test:
     needs: build-and-test
     if: needs.build-and-test.outputs.models_changed == 'true'
