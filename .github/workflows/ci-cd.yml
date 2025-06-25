@@ -63,6 +63,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
+          chmod -R +x scripts/
           make ingest-dev-local
           make process-dev-local
           make train-dev-local
@@ -79,6 +80,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           . venv/bin/activate
+          chmod -R +x scripts/
           make ingest-prod-local
           make process-prod-local
           make train-prod-local
