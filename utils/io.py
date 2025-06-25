@@ -1,14 +1,14 @@
 import yaml
 import os
 import re
-import logging
 from cerberus import Validator
 from utils.config_schema import (
     aws_schema,
     cloud_schema,
     data_schema,
     generative_ai_schema,
-    model_schema,
+    model_schema_sklearn,
+    model_schema_spark,
 )
 from utils.logging_utils import setup_logger
 
@@ -48,7 +48,7 @@ def load_yaml(path: str, interpolate_env: bool = False) -> dict:
         logger.error(f"Failed to parse YAML file {path}: {e}")
         raise
 
-def validate_config_sections(config: dict):
+def validate_config_sections(config: dict, env: str):
     """
     Validate each config section using its corresponding Cerberus schema.
     Raises ValueError if any section is invalid or missing.
@@ -58,8 +58,16 @@ def validate_config_sections(config: dict):
         "cloud": cloud_schema,
         "data": data_schema,
         "generative_ai": generative_ai_schema,
-        "model": model_schema,
     }
+
+    if env == "dev":
+        schema_map["model"] = model_schema_sklearn
+    elif env == "prod":
+        schema_map["model"] = model_schema_spark
+    else:
+        logger.error(f"Unknown environment '{env}' provided for config validation.")
+        raise ValueError(f"Unknown environment '{env}'")
+
     for section, schema in schema_map.items():
         if section in config:
             v = Validator(schema)
@@ -67,7 +75,7 @@ def validate_config_sections(config: dict):
                 logger.error(f"Config '{section}' is invalid: {v.errors}")
                 raise ValueError(f"Config '{section}' is invalid: {v.errors}")
             else:
-                logger.info(f"Config section '{section}' validated successfully.")
+                logger.info(f"✅ Config section '{section}' validated successfully.")
         else:
             logger.error(f"Config section '{section}' is missing!")
             raise KeyError(f"Config section '{section}' is missing!")
@@ -77,9 +85,8 @@ def load_env_config(env: str) -> dict:
     Load and merge all YAML configuration files from configs/<env>/.
     Each file is nested under its base name (without extension) as a top-level key.
     Only 'aws.yaml' will interpolate environment variables.
-    If a file is empty, its value will be an empty dict.
     """
-    base_dir = os.path.dirname(os.path.dirname(__file__))  # root of the project
+    base_dir = os.path.dirname(os.path.dirname(__file__))
     config_dir = os.path.join(base_dir, "configs", env)
 
     if not os.path.isdir(config_dir):
@@ -87,7 +94,6 @@ def load_env_config(env: str) -> dict:
         raise FileNotFoundError(f"Config directory not found: {config_dir}")
 
     config = {}
-    # Sort files for deterministic loading
     for filename in sorted(os.listdir(config_dir)):
         if filename.endswith(".yaml") or filename.endswith(".yml"):
             key = os.path.splitext(filename)[0]
@@ -97,6 +103,6 @@ def load_env_config(env: str) -> dict:
                 logger.warning(f"Duplicate config key '{key}' in {config_dir}. Overwriting previous value.")
             config[key] = load_yaml(filepath, interpolate_env=interpolate)
 
-    validate_config_sections(config)
+    validate_config_sections(config, env)
     logger.info(f"Configuration for environment '{env}' loaded and validated.")
     return config

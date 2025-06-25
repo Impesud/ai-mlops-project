@@ -3,6 +3,7 @@ from pyspark.sql.functions import (
     unix_timestamp, when, trim, lower as spark_lower, current_timestamp,
     count, sum as spark_sum, max as spark_max, to_date
 )
+from pyspark.sql.window import Window as SparkWindow
 from pyspark.sql.types import StringType, TimestampType, DoubleType, DataType
 from pyspark.sql import DataFrame, Window
 from typing import Dict
@@ -75,6 +76,14 @@ def advanced_feature_engineering(df: DataFrame) -> DataFrame:
     df = df.withColumn("add_to_cart_events", count(when(col("action") == "add_to_cart", 1)).over(user_window))
     df = df.withColumn("purchase_ratio", col("purchase_events") / col("total_events"))
     df = df.withColumn("add_to_cart_ratio", col("add_to_cart_events") / col("total_events"))
+    
+    # Rolling window: last 7 days for user
+
+    window_7_days = SparkWindow.partitionBy("user_id").orderBy(col("event_time").cast("long")).rangeBetween(-7*86400, 0)
+    df = df.withColumn("rolling_purchase_7d", spark_sum(when(col("action") == "purchase", 1).otherwise(0)).over(window_7_days))
+    df = df.withColumn("rolling_value_7d", spark_sum("value").over(window_7_days))
+    df = df.withColumn("rolling_events_7d", count("event_time").over(window_7_days))
+    df = df.withColumn("rolling_avg_value_7d", (col("rolling_value_7d") / col("rolling_events_7d")).cast("double"))
 
     # Active days and average events per day
     active_days_df = df.select("user_id", to_date("event_time").alias("event_date")).distinct()
@@ -85,6 +94,14 @@ def advanced_feature_engineering(df: DataFrame) -> DataFrame:
     # Recency: days since last event
     df = df.withColumn("max_event_time", spark_max("event_time").over(user_window))
     df = df.withColumn("recency_days", (unix_timestamp(current_timestamp()) - unix_timestamp(col("max_event_time"))) / 86400)
+
+    # User segmentation by frequency
+    df = df.withColumn(
+        "user_segment",
+        when(col("total_events") >= 100, 2)
+        .when(col("total_events") >= 20, 1)
+        .otherwise(0)
+    )
 
     logger.info("✅ Advanced feature engineering completed.")
     return df

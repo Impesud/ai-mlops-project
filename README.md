@@ -1,136 +1,139 @@
 # AI MLOps Project
 
+[![CI/CD](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Spark-MLlib-FDEE21?logo=apachespark&logoColor=black)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-orange?logo=mlflow&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+
 ---
 
 ## ✨ Latest Updates (June 2025)
 
-- ✅ Full refactor of model training pipelines ([see Models Documentation](./docs/models.md))
-- ✅ Full behavioral feature engineering extension ([see Data Processing](./docs/data_processing.md))
-- ✅ Advanced calibration pipeline (Isotonic Calibration)
-- ✅ Automatic optimal threshold selection (Precision-Recall curve)
-- ✅ Rolling 7-day evaluation window for stability monitoring
-- ✅ Full MLflow integration ([see MLflow Integration](./docs/mlflow_registry.md))
-- ✅ YAML-driven modular architecture for full reproducibility
-- ✅ Fully operational Makefile added for streamlined execution
+- ✅ Advanced time-based feature engineering (Spark-driven)
+- ✅ `train_sklearn.py`: Calibrated + threshold-optimized RandomForest
+- ✅ `train_spark.py`: Distributed GBTClassifier + full evaluation
+- ✅ Precision and F1 improvements through GridSearch and calibration
+- ✅ MLflow artifact tracking fully structured and consistent
+- ✅ YAML-driven hyperparameter config with rolling metric logs
+- ✅ Added model signature, input examples, confusion matrices, ROC, PR curves
 
 ---
 
 ## 🔍 Project Overview
 
-AI MLOps Platform for **behavioral purchase prediction** models with full MLOps automation:
+AI MLOps Platform for **behavioral purchase prediction**, equipped with:
 
-- 🚚 Data ingestion (local & cloud)
-- 🔄 Spark-based feature engineering (time, recency, frequency, behavioral aggregates)
-- 🔹 Imbalanced learning handling (SMOTE-Tomek, class weights)
-- 💡 Dual model engines: Spark MLlib (prod) & scikit-learn (dev)
-- 🔄 Full hyperparameter search integration
-- 🔹 MLflow experiment tracking and model versioning
-- 🔹 Rolling stability metrics (time-aware validation)
-- 🔹 Cloud-ready (AWS S3, EMR, SageMaker supported)
-- 🔹 Fully containerized (Docker)
-- 📁 Complete CI/CD automation (GitHub Actions)
+- 🚚 Data ingestion (local + AWS S3)
+- 🔄 Spark-based feature engineering (time, recency, behavioral signals)
+- ⚖️ Class imbalance handling (SMOTETomek, dynamic class weights)
+- 🧠 Dual model engines: Scikit-learn (dev) & Spark MLlib (prod)
+- 🔍 GridSearch & CrossValidator support
+- 📈 MLflow experiment tracking + threshold-based metrics
+- 📦 Docker-ready + CI/CD (GitHub Actions)
+- 🤖 OpenAI API integration for automated AI reporting, with dynamic prompts and structured analysis of model results and business KPIs.
 
 ---
 
-## 🔠 Current Model Results (Sklearn Dev Mode)
+## 🔢 Current Model Results
 
-| Metric             | Value  |
-| ------------------ | ------ |
-| **Accuracy**       | 88.85% |
-| **Precision**      | 74.73% |
-| **Recall**         | 80.14% |
-| **F1-score**       | 77.33% |
-| **ROC AUC**        | 93.44% |
-| **Best Threshold** | 0.457  |
+### 🧪 `Scikit-learn` (Dev)
 
-These results reflect major improvements after feature engineering extension, full calibration, dynamic thresholding and hyperparameter optimization.
+| Metric        | Value  |
+| ------------- | ------ |
+| Accuracy      | 71.84% |
+| Precision     | 43.96% |
+| Recall        | 67.99% |
+| F1-score      | 53.39% |
+| ROC AUC       | 77.33% |
+| BestThreshold | 0.215  |
+
+### 🧪 `Spark MLlib` (Prod)
+
+| Metric        | Value  |
+| ------------- | ------ |
+| Accuracy      | 91.25% |
+| Precision     | 63.87% |
+| Recall        | 100.00% |
+| F1-score      | 77.95% |
+| ROC AUC       | 98.17% |
 
 ---
 
-## 🔀 Training Pipelines
+## ⚙️ Model Pipelines
 
-| Mode | Engine       | Description                                              | Entry Point            |
-| ---- | ------------ | -------------------------------------------------------- | ----------------------- |
-| dev  | Scikit-learn | Random Forest + SMOTETomek + Calibration + GridSearchCV | `models/train_sklearn.py` |
-| prod | Spark MLlib  | GBTClassifier + CrossValidator (distributed Spark ML)    | `models/train_spark.py`   |
+| Mode | Engine       | Pipeline Summary                                       |
+| ---- | ------------ | ------------------------------------------------------ |
+| dev  | Scikit-learn | SMOTETomek + RF + Calibration + GridSearchCV           |
+| prod | Spark MLlib  | GBTClassifier + VectorAssembler + CrossValidator       |
 
-**Unified Dispatcher Logic:**
+Unified Dispatcher:
 
 ```bash
 python models/train.py --env dev
-python models/train.py --env prod --mlflow-ui
+python models/train.py --env prod
 ```
 
 ---
 
-## 🏢 Project Structure
+## 🏗️ Project Structure
 
 ```bash
 ai-mlops-project/
-├── data_processing/   # Spark-based ETL and feature engineering
-├── models/            # Full model training pipelines (sklearn & Spark)
-├── configs/           # YAML configs for environments
-├── docs/              # Documentation (data, models, mlflow)
-├── mlruns/            # MLflow tracking logs
-├── tests/             # Unit tests
-├── scripts/           # Execution orchestration scripts
-└── Makefile           # Fully integrated Makefile commands
+├── data_processing/   # Spark-based feature extraction
+├── models/            # Sklearn & Spark training pipelines
+├── configs/           # Environment YAMLs
+├── docs/              # Markdown documentation
+├── tests/             # Pytest-based unit tests
+├── scripts/           # Support scripts
+├── mlruns/            # MLflow experiment logs
+└── Makefile           # Full pipeline automation
 ```
 
 ---
 
-## 🛠️ Quickstart Commands
+## 🚀 Quickstart
 
 ```bash
-# Create virtual environment
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Full dev pipeline (sklearn)
-make train-dev
-
-# Full prod pipeline (Spark)
-make train-prod
-
-# Start MLflow UI
-make mlflow
+make train-dev   # Local sklearn pipeline
+make train-prod  # Distributed Spark training
+make mlflow      # MLflow UI
 ```
 
-The Makefile now wraps all major operations for simplified reproducibility.
+---
+
+## 📘 Documentation
+
+- 📊 [Data Processing](./docs/data_processing.md)
+- 🔧 [Model Training](./docs/models.md)
+- 📦 [MLflow Registry](./docs/mlflow_registry.md)
 
 ---
 
-## 🔍 Full Documentation
+## 🔄 CI/CD Pipeline
 
-- 🔹 [Data Processing & Feature Engineering](./docs/data_processing.md)
-- 🔹 [Models Training Pipelines](./docs/models.md)
-- 🔹 [MLflow Integration Details](./docs/mlflow_registry.md)
-
----
-
-## 🔄 CI/CD Pipeline (GitHub Actions)
-
-- Build and test environment setup
-- Data ingestion tests
-- Model training validations
-- MLflow model artifact handling
-- Docker image build (optional extension)
+- 🧪 Unit tests and validations
+- 📦 Model artifact verification
+- 🔁 MLflow logging consistency checks
+- 🐳 Docker image
 
 ---
 
-## 🔹 Upcoming Roadmap
+## 🧭 Roadmap
 
-- Optuna-based hyperparameter search (planned)
-- Cloud deployment automation (EMR, SageMaker)
-- Full model serving via MLflow Serve + FastAPI
-- Automated LLM-powered monitoring & reporting
-- Full production-ready CI/CD deployment pipeline
+- ⏳ Optuna optimization support
+- ☁️ Cloud deployment (EMR, SageMaker)
+- 🌐 MLflow + FastAPI model serving
+- 🤖 LLM-powered monitoring
 
 ---
 
-**Maintainer:** Erick Jara — CTO & AI/Data Engineer
-GitHub: [Impesud](https://github.com/Impesud) • Contact: [erick.jara@hotmail.it](mailto:erick.jara@hotmail.it)
-
+**Maintainer:** Erick Jara — CTO & AI/Data Engineer  
+📧 [erick.jara@hotmail.it](mailto:erick.jara@hotmail.it) | 🌐 GitHub: [Impesud](https://github.com/Impesud)
 
 
 
