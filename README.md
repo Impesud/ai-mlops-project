@@ -1,6 +1,6 @@
 # AI MLOps Project
 
-[![CI/CD](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
 ![Apache Spark](https://img.shields.io/badge/Spark-MLlib-FDEE21?logo=apachespark&logoColor=black)
