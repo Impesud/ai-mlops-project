@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ dev, main ]
+  pull_request:
+    branches: [ dev, main ]
 
 env:
   PYTHON_VERSION: '3.11'
