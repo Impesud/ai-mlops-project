@@ -81,14 +81,18 @@ python models/train.py --env prod
 
 ```bash
 ai-mlops-project/
-├── data_processing/   # Spark-based feature extraction
-├── models/            # Sklearn & Spark training pipelines
-├── configs/           # Environment YAMLs
-├── docs/              # Markdown documentation
-├── tests/             # Pytest-based unit tests
-├── scripts/           # Support scripts
-├── mlruns/            # MLflow experiment logs
-└── Makefile           # Full pipeline automation
+├── configs/           # Environment YAMLs, training parameters, MLflow config
+├── data/              # Datasets (raw, intermediate, processed) 
+├── data_ingestion/    # Scripts for data download, loading, and storage
+├── data_processing/   # Spark-based feature engineering and preprocessing pipelines
+├── docs/              # Markdown documentation, diagrams, architecture notes
+├── generative_ai/     # LLM integrations, prompts, embedding pipelines, NLP tools
+├── mlruns/            # MLflow experiment logs and artifacts (auto-generated)
+├── models/            # Sklearn & Spark training pipelines, model classes, training logic
+├── scripts/           # CLI scripts for training, evaluation, deployment
+├── tests/             # Pytest-based unit and integration tests
+├── Makefile           # Full pipeline automation: make train, make deploy, make test, etc.
+└── .github/           # CI/CD workflows, CODEOWNERS, and GitHub Actions
 ```
 
 ---
@@ -99,9 +103,9 @@ ai-mlops-project/
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-make train-dev   # Local sklearn pipeline
-make train-prod  # Distributed Spark training
-make mlflow      # MLflow UI
+make train-dev-local   # Local sklearn pipeline
+make train-prod-local  # Distributed Spark training
+make mlflow-local      # MLflow UI
 ```
 
 ---
@@ -111,6 +115,7 @@ make mlflow      # MLflow UI
 - 📊 [Data Processing](./docs/data_processing.md)
 - 🔧 [Model Training](./docs/models.md)
 - 📦 [MLflow Registry](./docs/mlflow_registry.md)
+- 📦 [Dependencies](./docs/dependencies.md)
 
 ---
 
