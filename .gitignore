@@ -16,8 +16,16 @@ data/intermediate/dev/*
 data/intermediate/prod/*
 data/processed/dev/*
 data/processed/prod/*
-!data/intermediate/.gitkeep
-!data/processed/.gitkeep
+
+!data/intermediate/dev/
+!data/intermediate/prod/
+!data/processed/dev/
+!data/processed/prod/
+
+!data/intermediate/dev/.gitkeep
+!data/intermediate/prod/.gitkeep
+!data/processed/dev/.gitkeep
+!data/processed/prod/.gitkeep
 
 # Logs
 logs/*
