@@ -70,27 +70,6 @@ jobs:
       ## Run full pipeline (MAIN)
       #############################
       - name: Run pipeline on MAIN branch
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-=======
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
->>>>>>> c87e1056 (Update Docker system)
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          source venv/bin/activate
-          make pipeline-dev-local
-
-<<<<<<< HEAD
-      - name: Run MAIN pipeline (Spark)
->>>>>>> ef067a5b (Update/fix docker configuration)
-=======
-      - name: Run full pipeline (MAIN branch)
->>>>>>> c87e1056 (Update Docker system)
->>>>>>> 2f27be62 (Update ci-cd)
-=======
->>>>>>> 2ec495d5 (Update ci-cd.yml)
         if: github.ref == 'refs/heads/main'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -115,27 +94,6 @@ jobs:
       ######################
       ## Upload artifacts ##
       ######################
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-=======
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
->>>>>>> c87e1056 (Update Docker system)
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          source venv/bin/activate
-          make pipeline-prod-local
-
-      - name: Run unit tests
-        run: |
-          source venv/bin/activate
-          pytest tests/
-
->>>>>>> ef067a5b (Update/fix docker configuration)
->>>>>>> 2f27be62 (Update ci-cd)
-=======
->>>>>>> 2ec495d5 (Update ci-cd.yml)
       - name: Upload MLflow model artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -176,15 +134,9 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/ai-mlops-project:latest
 
-<<<<<<< HEAD
-  ##################################
-  ## MODEL SMOKE TEST (ONLY IF MODELS CHANGED)
-  ##################################
-=======
   ############################################
   ## MODEL SMOKE TEST (ONLY IF MODELS CHANGED)
   ############################################
->>>>>>> 2ec495d5 (Update ci-cd.yml)
   model-smoke-test:
     needs: build-and-test
     if: needs.build-and-test.outputs.models_changed == 'true'
