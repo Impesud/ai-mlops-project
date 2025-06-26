@@ -28,3 +28,5 @@ docs/reports/*
 # Virtual environments
 .venv/
 env/
+data/**/*.parquet
+data/**/*.crc
