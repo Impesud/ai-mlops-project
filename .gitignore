@@ -11,17 +11,16 @@ __pycache__/
 mlruns/
 !mlruns/.gitkeep
 
-#Data
-data/intermediate/dev/*
-data/intermediate/prod/*
-data/processed/dev/*
-data/processed/prod/*
-
+# Data folders: keep structure, track files
+!data/
+!data/intermediate/
 !data/intermediate/dev/
 !data/intermediate/prod/
+!data/processed/
 !data/processed/dev/
 !data/processed/prod/
 
+# Keep .gitkeep placeholders
 !data/intermediate/dev/.gitkeep
 !data/intermediate/prod/.gitkeep
 !data/processed/dev/.gitkeep
@@ -29,12 +28,13 @@ data/processed/prod/*
 
 # Logs
 logs/*
+!logs/.gitkeep
 
 # Documentation
 docs/reports/*
+!docs/reports/.gitkeep
 
 # Virtual environments
 .venv/
 env/
-data/**/*.parquet
-data/**/*.crc
+
