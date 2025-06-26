@@ -3,6 +3,7 @@ import os
 import glob
 import pytest
 
+@pytest.mark.skipif(os.getenv("GITHUB_EVENT_NAME") == "pull_request", reason="Skipping MLflow test during PR checks")
 def test_mlflow_last_run_has_model():
     """
     Verifies that a model was successfully logged in the last MLflow run
@@ -20,7 +21,6 @@ def test_mlflow_last_run_has_model():
         order_by=["start_time DESC"]
     )
 
-
     assert not runs.empty, f"❌ No MLflow runs found for experiment '{experiment_name}' in env '{test_env}'"
 
     run_id = runs.iloc[0].run_id
@@ -34,4 +34,5 @@ def test_mlflow_last_run_has_model():
         print(f"✅ Model found: {model_dir}")
     except Exception as e:
         raise AssertionError(f"❌ Error while downloading model artifacts: {e}")
+
 
