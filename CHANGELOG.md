@@ -1,3 +1,15 @@
+## [1.0.1](https://github.com/Impesud/ai-mlops-project/compare/v1.0.0...v1.0.1) (2025-06-27)
+
+
+### Bug Fixes
+
+* change docker-build-and-push config ([fa661b8](https://github.com/Impesud/ai-mlops-project/commit/fa661b86dd607d7c12a827c25a77bf9d58562e7d))
+* change docker-build-and-push config ([2feb124](https://github.com/Impesud/ai-mlops-project/commit/2feb1245771f81a7573ebbc283d9245dfcafe02f))
+* change docker-build-and-push config  ([9eba5e3](https://github.com/Impesud/ai-mlops-project/commit/9eba5e3bb4828efff2716963168a511df707fdf2))
+* repository name in github container registry ([ddd3d28](https://github.com/Impesud/ai-mlops-project/commit/ddd3d28daa6a35d04b509aa21742b4261a304c97))
+* repository name in github container registry ([1f71cb7](https://github.com/Impesud/ai-mlops-project/commit/1f71cb7ac3d3aa006ea74a5fc59b3b0c4a971ba7))
+* repository name in github container registry  ([77c697a](https://github.com/Impesud/ai-mlops-project/commit/77c697ae3a10685a35b2831e5f6af97206cd3bd5))
+
 # 1.0.0 (2025-06-27)
 
 
