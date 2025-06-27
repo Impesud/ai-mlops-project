@@ -13,6 +13,7 @@ permissions:
 
 env:
   PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io/impesud
 
 jobs:
 
@@ -122,10 +123,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/ai-mlops-project:latest .
+          docker build -t ghcr.io/${{ env.REGISTRY }}/ai-mlops-project:latest .
 
       - name: Push to GHCR
-        run: docker push ghcr.io/${{ github.repository_owner }}/ai-mlops-project:latest
+        run: docker push ghcr.io/${{ env.REGISTRY }}/ai-mlops-project:latest
 
   model-smoke-test:
     needs: build-and-test
@@ -167,4 +168,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: semantic-release
-
