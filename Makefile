@@ -1,6 +1,6 @@
 # AI MLOps Project Makefile (Hybrid: Local & Dockerized)
 
-.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell
+.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell test-dev test-prod
 
 export PYTHONPATH := $(shell pwd)
 
@@ -14,6 +14,8 @@ help:
 	@echo "  make train-prod-local      # Train model locally (Spark prod)"
 	@echo "  make ingest-dev-local      # Ingest data locally (dev)"
 	@echo "  make ingest-prod-local     # Ingest data locally (prod)"
+	@echo "  make test-dev        		# Test data locally (dev)"
+	@echo "  make test-prod       		# Test data locally (prod)"
 	@echo ""
 	@echo "=== Dockerized runs ==="
 	@echo "  make build           # Build docker-compose stack"
@@ -62,16 +64,22 @@ ingest-prod-local:
 	./scripts/run_ingest.sh prod
 
 process-dev-local:
-	./scripts/run_process.sh dev
+	./scripts/run_process.sh dev && touch ./data/intermediate/dev/.gitkeep
 
 process-prod-local:
-	./scripts/run_process.sh prod
+	./scripts/run_process.sh prod && touch ./data/intermediate/prod/.gitkeep
 
 full-dev-local:
 	./scripts/run_pipeline.sh dev
 
 full-prod-local:
 	./scripts/run_pipeline.sh prod
+
+test-dev:
+	TEST_ENV=dev pytest tests/
+
+test-prod:
+	TEST_ENV=prod pytest tests/
 
 mlflow-local:
 	mlflow ui --backend-store-uri ./mlruns --port 5000
