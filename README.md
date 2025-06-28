@@ -1,11 +1,6 @@
 # AI MLOps Project
 
-[![CI/CD](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
-![Apache Spark](https://img.shields.io/badge/Spark-MLlib-FDEE21?logo=apachespark&logoColor=black)
-![MLflow](https://img.shields.io/badge/MLflow-Tracking-orange?logo=mlflow&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+&#x20;     &#x20;
 
 ---
 
@@ -18,6 +13,10 @@
 - ✅ MLflow artifact tracking fully structured and consistent
 - ✅ YAML-driven hyperparameter config with rolling metric logs
 - ✅ Added model signature, input examples, confusion matrices, ROC, PR curves
+- ✅ CI/CD improved with Buildx caching, protected branches, and PAT for semantic-release
+- ✅ Docker build hardened with retry logic and compressed layer caching
+- ✅ Multiple PR templates + branch rules enforced in GitHub Actions
+- ✅ OpenAI-powered LLM reporting integrated into CI pipeline
 
 ---
 
@@ -26,7 +25,7 @@
 AI MLOps Platform for **behavioral purchase prediction**, equipped with:
 
 - 🚚 Data ingestion (local + AWS S3)
-- 🔄 Spark-based feature engineering (time, recency, behavioral signals)
+- 🔀 Spark-based feature engineering (time, recency, behavioral signals)
 - ⚖️ Class imbalance handling (SMOTETomek, dynamic class weights)
 - 🧠 Dual model engines: Scikit-learn (dev) & Spark MLlib (prod)
 - 🔍 GridSearch & CrossValidator support
@@ -36,39 +35,68 @@ AI MLOps Platform for **behavioral purchase prediction**, equipped with:
 
 ---
 
-## 🔢 Current Model Results
+## 📃 Semantic Release
 
-### 🧪 `Scikit-learn` (Dev)
+- Uses `@semantic-release` to automatically version and tag builds from main
+- Integrated PAT token to bypass protection rules
+- Full changelog and release notes updated via plugin
 
-| Metric        | Value  |
-| ------------- | ------ |
-| Accuracy      | 71.84% |
-| Precision     | 43.96% |
-| Recall        | 67.99% |
-| F1-score      | 53.39% |
-| ROC AUC       | 77.33% |
-| BestThreshold | 0.215  |
+Command for dry-run:
 
-### 🧪 `Spark MLlib` (Prod)
-
-| Metric        | Value  |
-| ------------- | ------ |
-| Accuracy      | 91.25% |
-| Precision     | 63.87% |
-| Recall        | 100.00% |
-| F1-score      | 77.95% |
-| ROC AUC       | 98.17% |
+```bash
+npx semantic-release --dry-run
+```
 
 ---
 
-## ⚙️ Model Pipelines
+## 🔢 GitHub Workflows Summary
 
-| Mode | Engine       | Pipeline Summary                                       |
-| ---- | ------------ | ------------------------------------------------------ |
-| dev  | Scikit-learn | SMOTETomek + RF + Calibration + GridSearchCV           |
-| prod | Spark MLlib  | GBTClassifier + VectorAssembler + CrossValidator       |
+Main CI/CD file: `.github/workflows/ci-cd.yml`
 
-Unified Dispatcher:
+Includes jobs:
+
+- `build-and-test`: local lint, test, train
+- `docker-build-and-push`: buildx + GHCR
+- `model-smoke-test`: simple inference test
+- `semantic-release`: versioning and release
+
+Protected branches supported via PAT: `secrets.PAT_GITHUB`
+
+---
+
+## 🔹 Run Full Project (DEV & PROD)
+
+```bash
+# Create and activate environment
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+# DEVELOPMENT
+make ingest-dev-local
+make process-dev-local
+make train-dev-local
+make test-dev
+
+# PRODUCTION
+make ingest-prod-local
+make process-prod-local
+make train-prod-local
+make test-prod
+
+# Launch MLflow UI
+make mlflow-local
+```
+
+---
+
+## 🔢 Model Pipelines
+
+| Mode | Engine       | Pipeline Summary                                 |
+| ---- | ------------ | ------------------------------------------------ |
+| dev  | Scikit-learn | SMOTETomek + RF + Calibration + GridSearchCV     |
+| prod | Spark MLlib  | GBTClassifier + VectorAssembler + CrossValidator |
+
+Dispatcher:
 
 ```bash
 python models/train.py --env dev
@@ -110,25 +138,31 @@ make mlflow-local      # MLflow UI
 
 ---
 
-## 📘 Documentation
+## 📘️ Documentation
 
 - 📊 [Data Processing](./docs/data_processing.md)
 - 🔧 [Model Training](./docs/models.md)
 - 📦 [MLflow Registry](./docs/mlflow_registry.md)
 - 📦 [Dependencies](./docs/dependencies.md)
+- 📦 [Github Workflow](./docs/github-workflow.md)
+- 📦 [Semantic Commit](./docs/semantic-commit-guide.md)
+- 📦 [Makefile](./Makefile)
 
 ---
 
 ## 🔄 CI/CD Pipeline
 
-- 🧪 Unit tests and validations
+- 🧪 Unit tests and validations (local + Docker-based)
 - 📦 Model artifact verification
-- 🔁 MLflow logging consistency checks
-- 🐳 Docker image
+- 🔀 MLflow logging consistency checks
+- 🐳 Docker image with Buildx caching
+- 🌐 Semantic Release with PAT (protected branch support)
+- 📌 PR Templates and branch rules enforced
+- 🤖 OpenAI-integrated reporting (Generative AI)
 
 ---
 
-## 🧭 Roadmap
+## 🔮 Roadmap
 
 - ⏳ Optuna optimization support
 - ☁️ Cloud deployment (EMR, SageMaker)
@@ -137,8 +171,8 @@ make mlflow-local      # MLflow UI
 
 ---
 
-**Maintainer:** Erick Jara — CTO & AI/Data Engineer  
-📧 [erick.jara@hotmail.it](mailto:erick.jara@hotmail.it) | 🌐 GitHub: [Impesud](https://github.com/Impesud)
+**Maintainer:** Erick Jara — CTO & AI/Data Engineer\
+📧 [erick.jara@hotmail.it](mailto\:erick.jara@hotmail.it) | 🌐 GitHub: [Impesud](https://github.com/Impesud)
 
 
 
