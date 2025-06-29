@@ -16,7 +16,6 @@ env:
   REGISTRY: ghcr.io/impesud
 
 jobs:
-
   build-and-test:
     runs-on: ubuntu-latest
     outputs:
@@ -44,13 +43,19 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install --upgrade pip setuptools
-          pip install -r requirements.txt pytest
+          pip install -r requirements.txt
+          pip install pre-commit
 
       - name: Debug environment
         run: |
           . venv/bin/activate
           python --version
           pip freeze
+
+      - name: Run pre-commit checks
+        run: |
+          . venv/bin/activate
+          pre-commit run --all-files
 
       - name: Prepare MLflow directory
         if: github.event_name != 'pull_request'
@@ -66,7 +71,6 @@ jobs:
           . venv/bin/activate
           chmod -R +x scripts/
           BRANCH=$(echo "${GITHUB_REF##*/}")
-
           if [[ "$BRANCH" == "main" ]]; then
             make ingest-prod-local
             make process-prod-local
@@ -86,11 +90,7 @@ jobs:
           . venv/bin/activate
           chmod -R +x tests/
           BRANCH=$(echo "${GITHUB_REF##*/}")
-          if [[ "$BRANCH" == "main" ]]; then
-            make test-prod
-          else
-            make test-dev
-          fi
+          pytest tests/
 
       - name: Upload MLflow model artifacts
         if: github.event_name != 'pull_request'
@@ -152,18 +152,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - run: pip install mlflow pandas
+
       - uses: actions/download-artifact@v4
         with:
           name: trained-model
           path: mlruns
+
       - run: |
           nohup mlflow models serve -m mlruns/**/model --no-conda --port 1234 &
           sleep 10
+
       - run: |
           curl -X POST http://127.0.0.1:1234/invocations \
             -H 'Content-Type: application/json' \
             -d '{"dataframe_records":[{"value":42.0,"hour":12.0,"day_of_week":3.0,"month":6.0}]}' || true
+
       - run: echo "✅ Model smoke test completed"
 
   semantic-release:
@@ -190,5 +195,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
         run: semantic-release
+
+
 
 

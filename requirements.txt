@@ -10,3 +10,12 @@ openai
 pytest
 cerberus
 seaborn>=0.12
+black
+flake8
+isort
+mypy
+bandit
+types-PyYAML
+Flake8-pyproject
+pre-commit
+toml

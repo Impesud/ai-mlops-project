@@ -1,6 +1,18 @@
 # AI MLOps Project
 
-&#x20;     &#x20;
+[![CI/CD](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Impesud/ai-mlops-project/actions/workflows/ci-cd.yml)
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![Spark MLlib](https://img.shields.io/badge/Spark-MLlib-orange?logo=apache-spark)
+![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-ML-yellow?logo=scikit-learn)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-blueviolet?logo=mlflow)
+![Docker](https://img.shields.io/badge/Docker-Container-lightblue?logo=docker)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-black?logo=github-actions)
+![Black](https://img.shields.io/badge/Black-Formatter-black?logo=python)
+![Flake8](https://img.shields.io/badge/Flake8-Linter-red?logo=python)
+![MyPy](https://img.shields.io/badge/MyPy-Type_Checking-informational?logo=python)
+![Bandit](https://img.shields.io/badge/Bandit-Security-lightcoral?logo=python)
+![Pre-Commit](https://img.shields.io/badge/Pre--Commit-Hooks-critical?logo=pre-commit)
+![Semantic Release](https://img.shields.io/badge/Semantic--Release-Automation-success?logo=semantic-release)
 
 ---
 
@@ -17,6 +29,8 @@
 - ✅ Docker build hardened with retry logic and compressed layer caching
 - ✅ Multiple PR templates + branch rules enforced in GitHub Actions
 - ✅ OpenAI-powered LLM reporting integrated into CI pipeline
+- ✅ Full Code Quality & Static Analysis (Black, Flake8, Isort, MyPy, Bandit)
+- ✅ Pre-commit hooks enabled to catch issues before commits
 
 ---
 
@@ -55,7 +69,7 @@ Main CI/CD file: `.github/workflows/ci-cd.yml`
 
 Includes jobs:
 
-- `build-and-test`: local lint, test, train
+- `build-and-test`: linting, type-checking, static analysis, unit tests, and pipeline logic
 - `docker-build-and-push`: buildx + GHCR
 - `model-smoke-test`: simple inference test
 - `semantic-release`: versioning and release
@@ -123,30 +137,16 @@ ai-mlops-project/
 └── .github/           # CI/CD workflows, CODEOWNERS, and GitHub Actions
 ```
 
----
-
-## 🚀 Quickstart
-
-```bash
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-
-make train-dev-local   # Local sklearn pipeline
-make train-prod-local  # Distributed Spark training
-make mlflow-local      # MLflow UI
-```
-
----
-
 ## 📘️ Documentation
 
 - 📊 [Data Processing](./docs/data_processing.md)
 - 🔧 [Model Training](./docs/models.md)
 - 📦 [MLflow Registry](./docs/mlflow_registry.md)
 - 📦 [Dependencies](./docs/dependencies.md)
-- 📦 [Github Workflow](./docs/github-workflow.md)
-- 📦 [Semantic Commit](./docs/semantic-commit-guide.md)
-- 📦 [Makefile](./Makefile)
+- ⚙️ [Code Quality & Static Analysis](./docs/code-quality.md)
+- 🧪 [Github Workflow](./docs/github-workflow.md)
+- 🧩 [Semantic Commit Guide](./docs/semantic-commit-guide.md)
+- 📦 [Makefile Reference](./Makefile)
 
 ---
 
@@ -159,6 +159,7 @@ make mlflow-local      # MLflow UI
 - 🌐 Semantic Release with PAT (protected branch support)
 - 📌 PR Templates and branch rules enforced
 - 🤖 OpenAI-integrated reporting (Generative AI)
+- ✅ Code linting, static analysis & type-checking enforced via CI & pre-commit
 
 ---
 
@@ -173,7 +174,6 @@ make mlflow-local      # MLflow UI
 
 **Maintainer:** Erick Jara — CTO & AI/Data Engineer\
 📧 [erick.jara@hotmail.it](mailto\:erick.jara@hotmail.it) | 🌐 GitHub: [Impesud](https://github.com/Impesud)
-
 
 
 

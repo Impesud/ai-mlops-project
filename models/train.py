@@ -1,5 +1,6 @@
 import argparse
 import sys
+
 from utils.logging_utils import setup_logger
 
 if __name__ == "__main__":
@@ -13,24 +14,20 @@ if __name__ == "__main__":
     try:
         if args.env == "dev":
             from models import train_sklearn
+
             logger.info("⚡ Dispatching to train_sklearn (scikit-learn)...")
             train_sklearn.main(env=args.env)
-            
+
         elif args.env == "prod":
             from models import train_spark
+
             logger.info("⚡ Dispatching to train_spark (Spark)...")
             train_spark.main(env=args.env)
-            
+
         else:
             logger.error(f"❌ Unknown environment: {args.env}")
             raise ValueError("Unknown environment")
-            
+
     except Exception as e:
         logger.exception(f"❌ Training failed: {e}")
         sys.exit(1)
-
-    
-
-
-    
-    

@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+
 def setup_logger(name: str, env: str = "dev", log_dir: str = "logs") -> logging.Logger:
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
