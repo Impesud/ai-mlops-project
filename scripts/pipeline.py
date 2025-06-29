@@ -1,11 +1,14 @@
-import os
-import sys
-import subprocess
-import boto3
 import argparse
+import os
+import subprocess  # nosec 404
+import sys
+from datetime import datetime
+
+import boto3
+
 from utils.io import load_env_config
 from utils.logging_utils import setup_logger
-from datetime import datetime
+
 
 def ensure_bucket(s3_client, bucket_name, region, logger):
     try:
@@ -13,10 +16,8 @@ def ensure_bucket(s3_client, bucket_name, region, logger):
         logger.info(f"Bucket '{bucket_name}' already exists.")
     except s3_client.exceptions.NoSuchBucket:
         logger.info(f"Creating bucket '{bucket_name}' in region '{region}'.")
-        s3_client.create_bucket(
-            Bucket=bucket_name,
-            CreateBucketConfiguration={"LocationConstraint": region}
-        )
+        s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region})
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -67,18 +68,22 @@ if __name__ == "__main__":
 
     logger.info("🚚 Starting Spark ingestion job...")
     try:
-        subprocess.run([
-            sys.executable, "-m", "data_ingestion.ingest_spark", "--env", args.env
-        ], check=True, env=env_vars)
+        subprocess.run(  # nosec B603
+            [sys.executable, "-m", "data_ingestion.ingest_spark", "--env", args.env],
+            check=True,
+            env=env_vars,
+        )
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Spark ingestion failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
     logger.info("🧹 Starting data processing job...")
     try:
-        subprocess.run([
-            sys.executable, "-m", "data_processing.process", "--env", args.env
-        ], check=True, env=env_vars)
+        subprocess.run(  # nosec B603
+            [sys.executable, "-m", "data_processing.process", "--env", args.env],
+            check=True,
+            env=env_vars,
+        )
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Data processing failed with exit code {e.returncode}")
         sys.exit(e.returncode)
@@ -88,7 +93,7 @@ if __name__ == "__main__":
         command = [sys.executable, "-m", "models.train", "--env", args.env]
         if args.mlflow_ui:
             command.append("--mlflow-ui")
-        subprocess.run(command, check=True, env=env_vars)
+        subprocess.run(command, check=True, env=env_vars)  # nosec B603
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Training failed with exit code {e.returncode}")
         sys.exit(e.returncode)
@@ -98,19 +103,24 @@ if __name__ == "__main__":
         prompt = os.environ.get("AI_PROMPT", "Data pipeline report")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_file = f"docs/reports/report_{args.env}_pipeline_{timestamp}.txt"
-        subprocess.run([
-            sys.executable, "-m", "generative_ai.generate", "--env", args.env, "--prompt", prompt, "--output", report_file
-        ], check=True, env=env_vars)
+        subprocess.run(  # nosec B603
+            [
+                sys.executable,
+                "-m",
+                "generative_ai.generate",
+                "--env",
+                args.env,
+                "--prompt",
+                prompt,
+                "--output",
+                report_file,
+            ],
+            check=True,
+            env=env_vars,
+        )
         logger.info(f"✅ Report saved to {report_file}")
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Report generation failed with exit code {e.returncode}")
         sys.exit(e.returncode)
 
     logger.info("🎉 Pipeline completed successfully.")
-
-
-
-
-
-
-

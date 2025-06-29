@@ -1,7 +1,11 @@
-import yaml
 import os
 import re
+from pathlib import Path
+from typing import Any, Dict
+
+import yaml
 from cerberus import Validator
+
 from utils.config_schema import (
     aws_schema,
     cloud_schema,
@@ -14,11 +18,12 @@ from utils.logging_utils import setup_logger
 
 logger = setup_logger("utils_io")
 
-def load_yaml(path: str, interpolate_env: bool = False) -> dict:
+
+def load_yaml(path: str, interpolate_env: bool = False) -> Dict[str, Any]:
     """
     Load a single YAML file and return its content as a dictionary.
     If interpolate_env is True, replaces ${VAR} with os.environ["VAR"] (or leaves as-is if not found).
-    Returns {} if the file is empty.
+    Returns {} if the file is empty or not a dict.
     """
     try:
         with open(path, "r", encoding="utf-8") as file:
@@ -30,23 +35,28 @@ def load_yaml(path: str, interpolate_env: bool = False) -> dict:
 
     if interpolate_env:
         pattern = re.compile(r"\$\{(\w+)\}")
-        def repl(m):
+
+        def repl(m: re.Match[str]) -> str:
             var = m.group(1)
             val = os.getenv(var)
             if val is None:
                 logger.warning(f"Environment variable '{var}' not set for interpolation in {path}")
                 return f"${{{var}}}"
             return val
+
         content = pattern.sub(repl, content)
 
     try:
-        data = yaml.safe_load(content)
-        if data is None:
-            data = {}
-        return data
+        raw_data = yaml.safe_load(content)
+        if raw_data is None:
+            return {}
+        if not isinstance(raw_data, dict):
+            raise TypeError(f"YAML content is not a dict: {type(raw_data)}")
+        return raw_data
     except Exception as e:
         logger.error(f"Failed to parse YAML file {path}: {e}")
         raise
+
 
 def validate_config_sections(config: dict, env: str):
     """
@@ -80,6 +90,7 @@ def validate_config_sections(config: dict, env: str):
             logger.error(f"Config section '{section}' is missing!")
             raise KeyError(f"Config section '{section}' is missing!")
 
+
 def load_env_config(env: str) -> dict:
     """
     Load and merge all YAML configuration files from configs/<env>/.
@@ -106,3 +117,22 @@ def load_env_config(env: str) -> dict:
     validate_config_sections(config, env)
     logger.info(f"Configuration for environment '{env}' loaded and validated.")
     return config
+
+
+def get_intermediate_output_path(env="dev"):
+    """
+    Retrieve the intermediate output path from the environment configuration.
+
+    Args:
+        env (str): Environment name ('dev', 'prod', ...)
+
+    Returns:
+        Path: Path to the intermediate .parquet folder
+    """
+    cfg = load_env_config(env)
+    return Path(cfg["data"]["local_intermediate_path"])
+
+
+def get_processed_output_path(env="dev"):
+    cfg = load_env_config(env)
+    return Path(cfg["data"]["local_processed_path"])

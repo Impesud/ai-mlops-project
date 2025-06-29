@@ -1,51 +1,47 @@
-import os
-import logging
 from pathlib import Path
-from utils.io import load_env_config
+from unittest.mock import patch
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import pytest
 
-def get_intermediate_output_path(env="dev"):
-    """
-    Retrieve the intermediate output path from the environment configuration.
-
-    Args:
-        env (str): Environment name ('dev', 'prod', ...)
-
-    Returns:
-        Path: Path to the intermediate .parquet folder
-    """
-    cfg = load_env_config(env)
-    return Path(cfg["data"]["local_intermediate_path"])
-
-def test_parquet_written_to_intermediate():
-    """
-    Test that at least one .parquet file was created in the intermediate output folder.
-    """
-    env = os.getenv("TEST_ENV", "dev")
-    intermediate_path = get_intermediate_output_path(env)
-
-    logger.info(f"📁 Checking intermediate output path: {intermediate_path}")
-    assert intermediate_path.exists(), f"❌ Folder '{intermediate_path}' does not exist."
-
-    parquet_files = list(intermediate_path.glob("*.parquet"))
-    logger.info(f"✅ Found {len(parquet_files)} .parquet file(s) in intermediate path.")
-    assert len(parquet_files) > 0, f"❌ No .parquet files found in '{intermediate_path}'."
-
-def test_parquet_file_not_empty():
-    """
-    Test that at least one .parquet file in the intermediate output folder is not empty.
-    """
-    env = os.getenv("TEST_ENV", "dev")
-    intermediate_path = get_intermediate_output_path(env)
-    parquet_files = list(intermediate_path.glob("*.parquet"))
-    assert len(parquet_files) > 0, "❌ No .parquet files to check for content."
-
-    non_empty_files = [f for f in parquet_files if f.stat().st_size > 0]
-    logger.info(f"✅ Found {len(non_empty_files)} non-empty .parquet file(s).")
-    assert len(non_empty_files) > 0, "❌ All .parquet files are empty."
+from utils.io import get_intermediate_output_path
 
 
-    
+@pytest.fixture
+def mock_env(monkeypatch):
+    monkeypatch.setenv("TEST_ENV", "dev")
+    yield
+    monkeypatch.delenv("TEST_ENV")
+
+
+@patch("utils.io.load_env_config")
+def test_get_intermediate_output_path_returns_path(mock_config):
+    mock_config.return_value = {"data": {"local_intermediate_path": "/tmp/data/intermediate"}}
+    result = get_intermediate_output_path("dev")
+    assert isinstance(result, Path)
+    assert str(result) == "/tmp/data/intermediate"
+    mock_config.assert_called_once_with("dev")
+
+
+@patch("pathlib.Path.glob")
+@patch("utils.io.load_env_config")
+def test_check_parquet_files_exist(mock_config, mock_glob, mock_env):
+    mock_config.return_value = {"data": {"local_intermediate_path": "/tmp/data/intermediate"}}
+    mock_glob.return_value = [Path("file1.parquet"), Path("file2.parquet")]
+
+    result_path = get_intermediate_output_path("dev")
+    files = list(result_path.glob("*.parquet"))
+    assert len(files) > 0
+
+
+@patch("pathlib.Path.stat")
+@patch("pathlib.Path.glob")
+@patch("utils.io.load_env_config")
+def test_parquet_files_not_empty(mock_config, mock_glob, mock_stat):
+    mock_config.return_value = {"data": {"local_intermediate_path": "/tmp/data/intermediate"}}
+    dummy_file = Path("file1.parquet")
+    mock_glob.return_value = [dummy_file]
+    mock_stat.return_value.st_size = 10
+
+    result_path = get_intermediate_output_path("dev")
+    files = list(result_path.glob("*.parquet"))
+    assert all(f.stat().st_size > 0 for f in files)

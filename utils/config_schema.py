@@ -1,6 +1,6 @@
 # schemas.py
 
-aws_schema = { 
+aws_schema = {
     "access_key_id": {"type": "string", "required": True, "empty": False},
     "secret_access_key": {"type": "string", "required": True, "empty": False},
     "region": {"type": "string", "required": True, "empty": False},
@@ -30,9 +30,7 @@ model_schema_sklearn = {
     "input_path": {"type": "string", "required": True, "empty": False},
     "test_size": {"type": "float", "required": True, "min": 0, "max": 1},
     "random_seed": {"type": "integer", "required": True},
-
     "features": {"type": "list", "required": True, "schema": {"type": "string"}},
-
     "model_params": {
         "type": "dict",
         "required": True,
@@ -44,21 +42,19 @@ model_schema_sklearn = {
             "class_weight": {
                 "type": "string",
                 "allowed": ["balanced", "balanced_subsample"],
-                "required": False
+                "required": False,
             },
-        }
+        },
     },
-
     "param_grid": {
         "type": "dict",
         "required": False,
         "keysrules": {"type": "string"},
         "valuesrules": {
             "type": "list",
-            "schema": {"type": ["integer", "float", "string"]}
-        }
+            "schema": {"type": ["integer", "float", "string"]},
+        },
     },
-
     "do_hyper_search": {"type": "boolean", "required": False},
     "cv_folds": {"type": "integer", "required": False, "min": 2},
 }
@@ -69,7 +65,6 @@ model_schema_spark = {
     "test_size": {"type": "float", "required": True, "min": 0, "max": 1},
     "random_seed": {"type": "integer", "required": True},
     "features": {"type": "list", "required": True, "schema": {"type": "string"}},
-
     "model_params": {
         "type": "dict",
         "required": True,
@@ -80,19 +75,17 @@ model_schema_spark = {
             "subsamplingRate": {"type": "float", "min": 0, "max": 1, "required": True},
             "minInstancesPerNode": {"type": "integer", "min": 1, "required": True},
             "minInfoGain": {"type": "float", "min": 0, "required": True},
-        }
+        },
     },
-
     "grid": {
         "type": "dict",
         "required": False,
         "keysrules": {"type": "string"},
         "valuesrules": {
             "type": "list",
-            "schema": {"type": ["integer", "float", "string"]}
-        }
+            "schema": {"type": ["integer", "float", "string"]},
+        },
     },
-
     "numFolds": {"type": "integer", "required": False, "min": 2},
-    "parallelism": {"type": "integer", "required": False, "min": 1}
+    "parallelism": {"type": "integer", "required": False, "min": 1},
 }

@@ -1,23 +1,26 @@
-from pyspark.sql.functions import (
-    col, hour, dayofweek, dayofmonth, weekofyear, month,
-    unix_timestamp, when, trim, lower as spark_lower, current_timestamp,
-    count, sum as spark_sum, max as spark_max, to_date
-)
-from pyspark.sql.window import Window as SparkWindow
-from pyspark.sql.types import StringType, TimestampType, DoubleType, DataType
-from pyspark.sql import DataFrame, Window
-from typing import Dict
 import logging
+from typing import Dict
+
+from pyspark.sql import DataFrame, Window
+from pyspark.sql.functions import col, count, current_timestamp, dayofmonth, dayofweek, hour
+from pyspark.sql.functions import lower as spark_lower
+from pyspark.sql.functions import max as spark_max
+from pyspark.sql.functions import month
+from pyspark.sql.functions import sum as spark_sum
+from pyspark.sql.functions import to_date, trim, unix_timestamp, weekofyear, when
+from pyspark.sql.types import DataType, DoubleType, StringType, TimestampType
+from pyspark.sql.window import Window as SparkWindow
 
 # Required columns with their expected types
 REQUIRED_COLUMNS: Dict[str, DataType] = {
     "user_id": StringType(),
     "event_time": TimestampType(),
     "action": StringType(),
-    "value": DoubleType()
+    "value": DoubleType(),
 }
 
 logger = logging.getLogger("features")
+
 
 def validate_schema(df: DataFrame) -> DataFrame:
     logger.info("🔍 Validating and casting schema if needed...")
@@ -26,11 +29,12 @@ def validate_schema(df: DataFrame) -> DataFrame:
             logger.error(f"❌ Missing required column: {col_name}")
             raise ValueError(f"Missing required column: {col_name}")
         actual_type = df.schema[col_name].dataType
-        if type(actual_type) != type(expected_type):
+        if not isinstance(actual_type, type(expected_type)):
             logger.warning(f"⚠️ Column '{col_name}' has type {actual_type}, casting to {expected_type}")
             df = df.withColumn(col_name, col(col_name).cast(expected_type))
     logger.info("✅ Schema validated and casted where needed.")
     return df
+
 
 def basic_cleaning(df: DataFrame, handle_outliers: bool = False) -> DataFrame:
     logger.info("🧹 Performing basic cleaning...")
@@ -55,6 +59,7 @@ def basic_cleaning(df: DataFrame, handle_outliers: bool = False) -> DataFrame:
     logger.info("✅ Basic cleaning completed.")
     return df
 
+
 def advanced_feature_engineering(df: DataFrame) -> DataFrame:
     logger.info("🧠 Starting advanced feature engineering...")
 
@@ -73,17 +78,28 @@ def advanced_feature_engineering(df: DataFrame) -> DataFrame:
     df = df.withColumn("total_value", spark_sum("value").over(user_window))
     df = df.withColumn("total_events", count("event_time").over(user_window))
     df = df.withColumn("purchase_events", count(when(col("action") == "purchase", 1)).over(user_window))
-    df = df.withColumn("add_to_cart_events", count(when(col("action") == "add_to_cart", 1)).over(user_window))
+    df = df.withColumn(
+        "add_to_cart_events",
+        count(when(col("action") == "add_to_cart", 1)).over(user_window),
+    )
     df = df.withColumn("purchase_ratio", col("purchase_events") / col("total_events"))
     df = df.withColumn("add_to_cart_ratio", col("add_to_cart_events") / col("total_events"))
-    
+
     # Rolling window: last 7 days for user
 
-    window_7_days = SparkWindow.partitionBy("user_id").orderBy(col("event_time").cast("long")).rangeBetween(-7*86400, 0)
-    df = df.withColumn("rolling_purchase_7d", spark_sum(when(col("action") == "purchase", 1).otherwise(0)).over(window_7_days))
+    window_7_days = (
+        SparkWindow.partitionBy("user_id").orderBy(col("event_time").cast("long")).rangeBetween(-7 * 86400, 0)
+    )
+    df = df.withColumn(
+        "rolling_purchase_7d",
+        spark_sum(when(col("action") == "purchase", 1).otherwise(0)).over(window_7_days),
+    )
     df = df.withColumn("rolling_value_7d", spark_sum("value").over(window_7_days))
     df = df.withColumn("rolling_events_7d", count("event_time").over(window_7_days))
-    df = df.withColumn("rolling_avg_value_7d", (col("rolling_value_7d") / col("rolling_events_7d")).cast("double"))
+    df = df.withColumn(
+        "rolling_avg_value_7d",
+        (col("rolling_value_7d") / col("rolling_events_7d")).cast("double"),
+    )
 
     # Active days and average events per day
     active_days_df = df.select("user_id", to_date("event_time").alias("event_date")).distinct()
@@ -93,18 +109,16 @@ def advanced_feature_engineering(df: DataFrame) -> DataFrame:
 
     # Recency: days since last event
     df = df.withColumn("max_event_time", spark_max("event_time").over(user_window))
-    df = df.withColumn("recency_days", (unix_timestamp(current_timestamp()) - unix_timestamp(col("max_event_time"))) / 86400)
+    df = df.withColumn(
+        "recency_days",
+        (unix_timestamp(current_timestamp()) - unix_timestamp(col("max_event_time"))) / 86400,
+    )
 
     # User segmentation by frequency
     df = df.withColumn(
         "user_segment",
-        when(col("total_events") >= 100, 2)
-        .when(col("total_events") >= 20, 1)
-        .otherwise(0)
+        when(col("total_events") >= 100, 2).when(col("total_events") >= 20, 1).otherwise(0),
     )
 
     logger.info("✅ Advanced feature engineering completed.")
     return df
-
-
-
