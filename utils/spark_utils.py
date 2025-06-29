@@ -1,5 +1,7 @@
 import os
+
 from pyspark.sql import SparkSession
+
 
 def create_spark_session(app_name="DataProcessingPipeline") -> SparkSession:
     """
@@ -12,8 +14,7 @@ def create_spark_session(app_name="DataProcessingPipeline") -> SparkSession:
     s3_endpoint = f"s3.{aws_region}.amazonaws.com"
 
     spark = (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.access.key", aws_access_key)

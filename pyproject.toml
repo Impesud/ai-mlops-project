@@ -1,0 +1,56 @@
+[tool.bandit]
+exclude_dirs = [".git", ".venv", "venv", ".mypy_cache", ".pytest_cache", "mlruns", "tests"]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+skip-string-normalization = false
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | \.mypy_cache
+  | \.pytest_cache
+  | mlruns
+)/
+'''
+[tool.flake8]
+ignore = ['E203', 'W503']
+max-line-length = 120
+count = true
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    ".mypy_cache",
+    ".pytest_cache",
+    "mlruns"
+]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip = ["venv", ".venv", "mlruns", "__pycache__"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+exclude = 'venv|\.venv|mlruns|\.mypy_cache'
+disallow_untyped_defs = false
+check_untyped_defs = false
+strict_optional = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

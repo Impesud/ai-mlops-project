@@ -1,6 +1,6 @@
 # AI MLOps Project Makefile (Hybrid: Local & Dockerized)
 
-.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell test-dev test-prod
+.PHONY: help pipeline-dev pipeline-prod ingest-dev ingest-prod train-dev train-prod full-dev full-prod mlflow sync-s3 docker-build docker-push clean build up down logs shell test-dev test-prod lint type-check sec-scan
 
 export PYTHONPATH := $(shell pwd)
 
@@ -14,36 +14,41 @@ help:
 	@echo "  make train-prod-local      # Train model locally (Spark prod)"
 	@echo "  make ingest-dev-local      # Ingest data locally (dev)"
 	@echo "  make ingest-prod-local     # Ingest data locally (prod)"
-	@echo "  make test-dev        		# Test data locally (dev)"
-	@echo "  make test-prod       		# Test data locally (prod)"
+	@echo "  make test-dev              # Test data locally (dev)"
+	@echo "  make test-prod             # Test data locally (prod)"
+	@echo ""
+	@echo "=== Quality checks ==="
+	@echo "  make lint                  # Lint & format checks via flake8, black, isort"
+	@echo "  make type-check            # Static typing check via mypy"
+	@echo "  make sec-scan              # Bandit security scan (severity: medium+)"
 	@echo ""
 	@echo "=== Dockerized runs ==="
-	@echo "  make build           # Build docker-compose stack"
-	@echo "  make up              # Start full stack"
-	@echo "  make down            # Stop stack"
-	@echo "  make logs            # Show logs"
-	@echo "  make shell           # Enter mlops container"
-	@echo "  make pipeline-dev    # Run pipeline inside docker (dev)"
-	@echo "  make pipeline-prod   # Run pipeline inside docker (prod)"
-	@echo "  make train-dev       # Train inside docker (dev)"
-	@echo "  make train-prod      # Train inside docker (prod)"
+	@echo "  make build                 # Build docker-compose stack"
+	@echo "  make up                    # Start full stack"
+	@echo "  make down                  # Stop stack"
+	@echo "  make logs                  # Show logs"
+	@echo "  make shell                 # Enter mlops container"
+	@echo "  make pipeline-dev          # Run pipeline inside docker (dev)"
+	@echo "  make pipeline-prod         # Run pipeline inside docker (prod)"
+	@echo "  make train-dev             # Train inside docker (dev)"
+	@echo "  make train-prod            # Train inside docker (prod)"
 	@echo ""
 	@echo "=== MLflow UI ==="
-	@echo "  make mlflow          # Start MLflow UI standalone (docker)"
+	@echo "  make mlflow                # Start MLflow UI standalone (docker)"
 	@echo ""
 	@echo "=== S3 Sync ==="
-	@echo "  make sync-s3         # Manual sync of data to S3"
+	@echo "  make sync-s3               # Manual sync of data to S3"
 	@echo ""
 	@echo "=== Docker image ==="
-	@echo "  make docker-build    # Build Docker image standalone"
-	@echo "  make docker-push     # Push Docker image to registry"
+	@echo "  make docker-build          # Build Docker image standalone"
+	@echo "  make docker-push           # Push Docker image to registry"
 	@echo ""
 	@echo "=== Maintenance ==="
-	@echo "  make clean           # Clean local artifacts"
+	@echo "  make clean                 # Clean local artifacts"
 	@echo ""
 
 # ----------------------------------------------------------
-# Local (non dockerized) execution - for pure local testing
+# Local execution
 
 pipeline-dev-local:
 	python scripts/pipeline.py --env dev
@@ -83,6 +88,23 @@ test-prod:
 
 mlflow-local:
 	mlflow ui --backend-store-uri ./mlruns --port 5000
+
+# ----------------------------------------------------------
+# Quality & compliance checks
+
+lint:
+	@echo "Running lint checks with black, isort, and flake8..."
+	black --check .
+	isort --check-only .
+	flake8 .
+
+type-check:
+	@echo "Running static type checks with mypy..."
+	mypy .
+
+sec-scan:
+	@echo "Running Bandit security scan (medium/high)..."
+	bandit -c pyproject.toml -r .
 
 # ----------------------------------------------------------
 # Docker Compose orchestration
@@ -127,7 +149,7 @@ sync-s3:
 	bash scripts/sync_s3.sh dev
 
 # ----------------------------------------------------------
-# Docker image build & push (standalone)
+# Docker image build & push
 
 docker-build:
 	docker build -t ${DOCKER_USERNAME}/ai-mlops-project:latest .

@@ -1,19 +1,21 @@
 # generate.py
 
 import argparse
-import sys 
-import os
-from datetime import datetime
 import glob
-import pandas as pd
-from openai import OpenAI, RateLimitError, APIError
+import os
+import sys
+from datetime import datetime
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+import pandas as pd
+from openai import APIError, OpenAI, RateLimitError
 
 from utils.io import load_env_config
 from utils.logging_utils import setup_logger
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 
 def generate_text(prompt: str, output_file: str, dev_mode: bool = False, mode: str = "dev"):
     logger = setup_logger("generate_ai", mode)
@@ -53,9 +55,9 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False, mode: s
             raise ValueError(f"Column '{col}' not found in data.")
 
     total = len(df)
-    purchase_count = int((df['action'] == 'purchase').sum())
+    purchase_count = int((df["action"] == "purchase").sum())
     non_purchase = total - purchase_count
-    value_stats = df['value'].describe().to_dict()
+    value_stats = df["value"].describe().to_dict()
 
     summary = (
         f"# 📈 Dataset Summary\n"
@@ -86,11 +88,14 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False, mode: s
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a skilled data analyst."},
-                    {"role": "user", "content": full_prompt}
+                    {"role": "user", "content": full_prompt},
                 ],
-                max_tokens=500
+                max_tokens=500,
             )
-            text = resp.choices[0].message.content
+            content = resp.choices[0].message.content
+            if content is None:
+                raise ValueError("OpenAI response content is empty.")
+            text = content
             logger.info("✅ AI report generated successfully.")
         except RateLimitError:
             logger.error("🚫 OpenAI API rate limit exceeded.")
@@ -105,18 +110,19 @@ def generate_text(prompt: str, output_file: str, dev_mode: bool = False, mode: s
 
     try:
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(f"# 📝 Generative Report\n\n{full_prompt}\n## 📋 AI Output\n{text}\n")
         logger.info(f"📁 Report saved to: {output_file}")
     except Exception as e:
         logger.error(f"❌ Failed to save report to {output_file}: {e}")
         raise
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--prompt', type=str, default='')
-    parser.add_argument('--output', type=str, default='')
-    parser.add_argument('--dev-mode', action='store_true', help='Use simulated mode (no API calls)')
-    parser.add_argument('--env', type=str, default='dev', help='Environment: dev or prod')
+    parser.add_argument("--prompt", type=str, default="")
+    parser.add_argument("--output", type=str, default="")
+    parser.add_argument("--dev-mode", action="store_true", help="Use simulated mode (no API calls)")
+    parser.add_argument("--env", type=str, default="dev", help="Environment: dev or prod")
     args = parser.parse_args()
     generate_text(args.prompt, args.output, args.dev_mode, args.env)
